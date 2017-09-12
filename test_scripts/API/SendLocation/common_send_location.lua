@@ -9,7 +9,6 @@ config.ValidateSchema = false
 --[[ Required Shared libraries ]]
 local mobile_session = require("mobile_session")
 local json = require("modules/json")
-local config = require("modules/config")
 
 local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local commonSteps = require("user_modules/shared_testcases/commonSteps")
@@ -179,6 +178,11 @@ end
 function common_send_location.getMobileSession(self, pAppId)
   if not pAppId then pAppId = 1 end
   return self["mobileSession" .. pAppId]
+end
+
+function common_send_location.getMobileAppId(pAppId)
+  if not pAppId then pAppId = 1 end
+  return config["application" .. pAppId].registerAppInterfaceParams.appID
 end
 
 function common_send_location.getPathToSDL()

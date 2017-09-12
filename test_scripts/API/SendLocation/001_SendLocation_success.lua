@@ -33,7 +33,7 @@ local request_params = {
         thoroughfare = "thoroughfare",
         subThoroughfare = "subThoroughfare"
     },
-    timestamp = {
+    timeStamp = {
         second = 40,
         minute = 30,
         hour = 14,
@@ -64,9 +64,10 @@ local function send_location(params, self)
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
     local deviceID = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"
-    params.locationImage.value = common_send_location.getPathToSDL() .. "/storage/"
-    params.locationImage.value = params.locationImage.value .. common_send_location.getHMIAppId(1) .. "_" .. deviceID
-    params.locationImage.value = params.locationImage.value .. "icon.png"
+    params.locationImage.value = common_send_location.getPathToSDL() .. "storage/"
+    params.locationImage.value = params.locationImage.value .. common_send_location.getMobileAppId(1) .. "_" .. deviceID
+    params.locationImage.value = params.locationImage.value .. "/icon.png"
+
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
