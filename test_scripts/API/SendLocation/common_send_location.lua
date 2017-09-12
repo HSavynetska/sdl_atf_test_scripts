@@ -7,12 +7,14 @@ config.defaultProtocolVersion = 2
 config.ValidateSchema = false
 
 --[[ Required Shared libraries ]]
+local mobile_session = require("mobile_session")
+local json = require("modules/json")
+local config = require("modules/config")
+
 local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
-local mobile_session = require("mobile_session")
-local json = require("modules/json")
 local hmi_values = require("user_modules/hmi_values")
 
 --[[ Local Variables ]]
@@ -82,9 +84,9 @@ local function ptu(self, ptu_update_func)
       self.hmiConnection:SendNotification("BasicCommunication.OnSystemRequest", { requestType = "PROPRIETARY", fileName = pts_file_name })
       getPTUFromPTS(ptu_table)
       local function updatePTU(tbl)
-        tbl.policy_table.functional_groupings.SendLocation.parameters = {}
-        tbl.policy_table.functional_groupings.SendLocation.parameters[1] = "longitudeDegrees"
-        tbl.policy_table.functional_groupings.SendLocation.parameters[2] = "latitudeDegrees"
+        tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters = {}
+        tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[1] = "longitudeDegrees"
+        tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[2] = "latitudeDegrees"
         tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID] = common_send_location.getSendLocationConfig()
       end
       updatePTU(ptu_table)
@@ -114,6 +116,7 @@ local function ptu(self, ptu_update_func)
             EXPECT_HMICALL("BasicCommunication.SystemRequest")
             :Do(function(_, d3)
                 self.hmiConnection:SendResponse(d3.id, "BasicCommunication.SystemRequest", "SUCCESS", { })
+                os.execute("cp /tmp/fs/mp/images/ivsu_cache/PolicyTableUpdate ~/ptu.json")
                 self.hmiConnection:SendNotification("SDL.OnReceivedPolicyUpdate", { policyfile = policy_file_path .. "/" .. policy_file_name })
               end)
             mobileSession:ExpectResponse(corIdSystemRequest, { success = true, resultCode = "SUCCESS" })
@@ -176,6 +179,10 @@ end
 function common_send_location.getMobileSession(self, pAppId)
   if not pAppId then pAppId = 1 end
   return self["mobileSession" .. pAppId]
+end
+
+function common_send_location.getPathToSDL()
+  return config.pathToSDL
 end
 
 function common_send_location.postconditions()
