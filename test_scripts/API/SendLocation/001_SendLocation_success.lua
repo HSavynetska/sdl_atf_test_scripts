@@ -77,10 +77,6 @@ local function send_location(params, self)
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
 end
 
-local function ptu_update_func(tbl)
-    tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID].groups = { "Base-4", "SendLocation" }
-end
-
 local function put_file(file_name, self)
     local CorIdPutFile = self.mobileSession1:SendRPC(
       "PutFile",
