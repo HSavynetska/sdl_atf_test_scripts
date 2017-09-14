@@ -1,22 +1,34 @@
 ---------------------------------------------------------------------------------------------------
--- User story: https://github.com/smartdevicelink/sdl_requirements/issues/3
--- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/SetInteriorVehicleData.md
+-- User story: https://github.com/smartdevicelink/sdl_requirements/issues/24
+-- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/TRS/embedded_navi/SendLocation_TRS.md
 -- Item: Use Case 1: Main Flow
 --
 -- Requirement summary:
--- [SDL_RC] Set available control module settings SetInteriorVehicleData
+-- SendLocation with address, longitudeDegrees, latitudeDegrees, deliveryMode and other parameters
 --
 -- Description:
--- In case:
--- 1) Application is registered with REMOTE_CONTROL appHMIType
--- 2) and sends valid SetInteriorVehicleData RPC with valid parameters
--- SDL must:
--- 1) Transfer this request to HMI
--- 2) Respond with <result_code> received from HMI
+-- App sends SendLocation will all available parameters.
+
+-- Pre-conditions:
+-- a. HMI and SDL are started
+-- b. appID is registered on SDL
+
+-- Steps:
+-- appID requests SendLocation with address, longitudeDegrees, latitudeDegrees, deliveryMode and other parameters
+
+-- Expected:
+
+-- SDL validates parameters of the request
+-- SDL checks if Navi interface is available on HMI
+-- SDL checks if SendLocation is allowed by Policies
+-- SDL checks if deliveryMode is allowed by Policies
+-- SDL transfers the request with allowed parameters to HMI
+-- SDL receives response from HMI
+-- SDL transfers response to mobile app
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local common_send_location = require('test_scripts/API/SendLocation/common_send_location')
+local commonSendLocation = require('test_scripts/API/SendLocation/common_send_location')
 
 --[[ Local Variables ]]
 local request_params = {
@@ -63,10 +75,9 @@ local request_params = {
 local function send_location(params, self)
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
-    local deviceID = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"
-    params.locationImage.value = common_send_location.getPathToSDL() .. "storage/"
-    params.locationImage.value = params.locationImage.value .. common_send_location.getMobileAppId(1) .. "_" .. deviceID
-    params.locationImage.value = params.locationImage.value .. "/icon.png"
+    local deviceID = commonSendLocation.getDeviceMAC()
+    params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
+        .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
@@ -90,14 +101,14 @@ end
 
 --[[ Scenario ]]
 runner.Title("Preconditions")
-runner.Step("Clean environment", common_send_location.preconditions)
-runner.Step("Start SDL, HMI, connect Mobile, start Session", common_send_location.start)
-runner.Step("RAI, PTU", common_send_location.rai_ptu)
-runner.Step("Activate App", common_send_location.activate_app)
+runner.Step("Clean environment", commonSendLocation.preconditions)
+runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
+runner.Step("RAI, PTU", commonSendLocation.rai_ptu)
+runner.Step("Activate App", commonSendLocation.activate_app)
 runner.Step("Upload file", put_file, {"icon.png"})
 
 runner.Title("Test")
 runner.Step("SendLocation - all params ", send_location, { request_params })
 
 runner.Title("Postconditions")
-runner.Step("Stop SDL", common_send_location.postconditions)
+runner.Step("Stop SDL", commonSendLocation.postconditions)

@@ -1,5 +1,5 @@
 ---------------------------------------------------------------------------------------------------
--- RC common module
+-- SendLocation common module
 ---------------------------------------------------------------------------------------------------
 --[[ General configuration parameters ]]
 config.deviceMAC = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"
@@ -20,11 +20,11 @@ local hmi_values = require("user_modules/hmi_values")
 local ptu_table = {}
 local hmiAppIds = {}
 
-local common_send_location = {}
+local commonSendLocation = {}
 
-common_send_location.timeout = 2000
-common_send_location.minTimeout = 500
-common_send_location.DEFAULT = "Default"
+commonSendLocation.timeout = 2000
+commonSendLocation.minTimeout = 500
+commonSendLocation.DEFAULT = "Default"
 
 local function allow_sdl(self)
   self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality",
@@ -37,7 +37,7 @@ local function checkIfPTSIsSentAsBinary(bin_data)
   end
 end
 
-function common_send_location.getSendLocationConfig()
+function commonSendLocation.getSendLocationConfig()
   return {
     keep_context = false,
     steal_focus = false,
@@ -86,7 +86,7 @@ local function ptu(self, ptu_update_func)
         tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters = {}
         tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[1] = "longitudeDegrees"
         tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[2] = "latitudeDegrees"
-        tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID] = common_send_location.getSendLocationConfig()
+        tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID] = commonSendLocation.getSendLocationConfig()
       end
       updatePTU(ptu_table)
       if ptu_update_func then
@@ -105,7 +105,7 @@ local function ptu(self, ptu_update_func)
       :Timeout(11000)
 
       for id = 1, getAppsCount() do
-        local mobileSession = common_send_location.getMobileSession(self, id)
+        local mobileSession = commonSendLocation.getMobileSession(self, id)
         mobileSession:ExpectNotification("OnSystemRequest", { requestType = "PROPRIETARY" })
         :Do(function(_, d2)
             -- print("App ".. id .. " was used for PTU")
@@ -126,7 +126,7 @@ local function ptu(self, ptu_update_func)
   os.remove(ptu_file_name)
 end
 
-function common_send_location.preconditions()
+function commonSendLocation.preconditions()
   commonFunctions:SDLForceStop()
   commonSteps:DeletePolicyTable()
   commonSteps:DeleteLogsFiles()
@@ -134,23 +134,27 @@ end
 
 --[[Module functions]]
 
-function common_send_location.activate_app(pAppId, self)
-  self, pAppId = common_send_location.getSelfAndParams(pAppId, self)
+function commonSendLocation.activate_app(pAppId, self)
+  self, pAppId = commonSendLocation.getSelfAndParams(pAppId, self)
   if not pAppId then pAppId = 1 end
   local pHMIAppId = hmiAppIds[config["application" .. pAppId].registerAppInterfaceParams.appID]
-  local mobSession = common_send_location.getMobileSession(self, pAppId)
+  local mobSession = commonSendLocation.getMobileSession(self, pAppId)
   local requestId = self.hmiConnection:SendRequest("SDL.ActivateApp", { appID = pHMIAppId })
   EXPECT_HMIRESPONSE(requestId)
   mobSession:ExpectNotification("OnHMIStatus", { hmiLevel = "FULL", audioStreamingState = "AUDIBLE", systemContext = "MAIN" })
-  commonTestCases:DelayedExp(common_send_location.minTimeout)
+  commonTestCases:DelayedExp(commonSendLocation.minTimeout)
 end
 
-function common_send_location.backupHMICapabilities()
+function commonSendLocation.backupHMICapabilities()
   local hmiCapabilitiesFile = commonFunctions:read_parameter_from_smart_device_link_ini("HMICapabilities")
   commonPreconditions:BackupFile(hmiCapabilitiesFile)
 end
 
-function common_send_location.getSelfAndParams(...)
+function commonSendLocation.getDeviceMAC()
+  return config.deviceMAC
+end
+
+function commonSendLocation.getSelfAndParams(...)
   local out = { }
   local selfIdx = nil
   for i,v in pairs({...}) do
@@ -170,36 +174,36 @@ function common_send_location.getSelfAndParams(...)
   return table.unpack(out, 1, table.maxn(out))
 end
 
-function common_send_location.getHMIAppId(pAppId)
+function commonSendLocation.getHMIAppId(pAppId)
   if not pAppId then pAppId = 1 end
   return hmiAppIds[config["application" .. pAppId].registerAppInterfaceParams.appID]
 end
 
-function common_send_location.getMobileSession(self, pAppId)
+function commonSendLocation.getMobileSession(self, pAppId)
   if not pAppId then pAppId = 1 end
   return self["mobileSession" .. pAppId]
 end
 
-function common_send_location.getMobileAppId(pAppId)
+function commonSendLocation.getMobileAppId(pAppId)
   if not pAppId then pAppId = 1 end
   return config["application" .. pAppId].registerAppInterfaceParams.appID
 end
 
-function common_send_location.getPathToSDL()
+function commonSendLocation.getPathToSDL()
   return config.pathToSDL
 end
 
-function common_send_location.postconditions()
+function commonSendLocation.postconditions()
   StopSDL()
 end
 
-function common_send_location.rai_ptu(ptu_update_func, self)
-  self, ptu_update_func = common_send_location.getSelfAndParams(ptu_update_func, self)
-  common_send_location.rai_ptu_n(1, ptu_update_func, self)
+function commonSendLocation.rai_ptu(ptu_update_func, self)
+  self, ptu_update_func = commonSendLocation.getSelfAndParams(ptu_update_func, self)
+  commonSendLocation.rai_ptu_n(1, ptu_update_func, self)
 end
 
-function common_send_location.rai_ptu_n(id, ptu_update_func, self)
-  self, id, ptu_update_func = common_send_location.getSelfAndParams(id, ptu_update_func, self)
+function commonSendLocation.rai_ptu_n(id, ptu_update_func, self)
+  self, id, ptu_update_func = commonSendLocation.getSelfAndParams(id, ptu_update_func, self)
   if not id then id = 1 end
   self["mobileSession" .. id] = mobile_session.MobileSession(self, self.mobileConnection)
   self["mobileSession" .. id]:StartService(7)
@@ -226,8 +230,8 @@ function common_send_location.rai_ptu_n(id, ptu_update_func, self)
     end)
 end
 
-function common_send_location.rai_n(id, self)
-  self, id = common_send_location.getSelfAndParams(id, self)
+function commonSendLocation.rai_n(id, self)
+  self, id = commonSendLocation.getSelfAndParams(id, self)
   if not id then id = 1 end
   self["mobileSession" .. id] = mobile_session.MobileSession(self, self.mobileConnection)
   self["mobileSession" .. id]:StartService(7)
@@ -246,13 +250,13 @@ function common_send_location.rai_n(id, self)
     end)
 end
 
-function common_send_location.restoreHMICapabilities()
+function commonSendLocation.restoreHMICapabilities()
   local hmiCapabilitiesFile = commonFunctions:read_parameter_from_smart_device_link_ini("HMICapabilities")
   commonPreconditions:RestoreFile(hmiCapabilitiesFile)
 end
 
-function common_send_location.start(pHMIParams, self)
-  self, pHMIParams = common_send_location.getSelfAndParams(pHMIParams, self)
+function commonSendLocation.start(pHMIParams, self)
+  self, pHMIParams = commonSendLocation.getSelfAndParams(pHMIParams, self)
   self:runSDL()
   commonFunctions:waitForSDLStart(self)
   :Do(function()
@@ -272,12 +276,12 @@ function common_send_location.start(pHMIParams, self)
     end)
 end
 
-function common_send_location.unregisterApp(pAppId, self)
-  local mobSession = common_send_location.getMobileSession(self, pAppId)
-  local hmiAppId = common_send_location.getHMIAppId(pAppId)
+function commonSendLocation.unregisterApp(pAppId, self)
+  local mobSession = commonSendLocation.getMobileSession(self, pAppId)
+  local hmiAppId = commonSendLocation.getHMIAppId(pAppId)
   local cid = mobSession:SendRPC("UnregisterAppInterface",{})
   EXPECT_HMINOTIFICATION("BasicCommunication.OnAppUnregistered", { appID = hmiAppId, unexpectedDisconnect = false })
   mobSession:ExpectResponse(cid, { success = true, resultCode = "SUCCESS"})
 end
 
-return common_send_location
+return commonSendLocation
