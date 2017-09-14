@@ -88,6 +88,14 @@ local function send_location(params, self)
     end)
 
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
+    :ValidIf (function(_,data)
+        if data.payload.info then
+            print("SDL sent redundant info parameter to mobile App ")
+            return false
+        else 
+            return true
+        end
+    end)
 end
 
 local function put_file(file_name, self)
@@ -97,7 +105,6 @@ local function put_file(file_name, self)
       "files/icon.png")
 
     self.mobileSession1:ExpectResponse(CorIdPutFile, { success = true, resultCode = "SUCCESS"})
-    :Timeout(10000)
 end
 
 --[[ Scenario ]]
@@ -109,7 +116,7 @@ runner.Step("Activate App", commonSendLocation.activate_app)
 runner.Step("Upload file", put_file, {"icon.png"})
 
 runner.Title("Test")
-runner.Step("SendLocation - all params ", send_location, { request_params })
+runner.Step("SendLocation - all params", send_location, { request_params })
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonSendLocation.postconditions)
