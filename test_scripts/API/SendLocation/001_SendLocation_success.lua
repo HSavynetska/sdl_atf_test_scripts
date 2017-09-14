@@ -46,6 +46,7 @@ local request_params = {
         subThoroughfare = "subThoroughfare"
     },
     timeStamp = {
+        millisecond = 0,
         second = 40,
         minute = 30,
         hour = 14,
