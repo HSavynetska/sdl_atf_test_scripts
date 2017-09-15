@@ -34,6 +34,7 @@ local commonSendLocation = require('test_scripts/API/SendLocation/common_send_lo
 local request_params = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
+    addressLines = "Detroit city",
     address = {
         countryName = "countryName",
         countryCode = "countryName",
@@ -76,6 +77,7 @@ local request_params = {
 local function send_location(params, self)
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
+    params.appID = commonSendLocation.getHMIAppId()
     local deviceID = commonSendLocation.getDeviceMAC()
     params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
@@ -98,10 +100,10 @@ local function send_location(params, self)
     end)
 end
 
-local function put_file(file_name, self)
+local function put_file(self)
     local CorIdPutFile = self.mobileSession1:SendRPC(
       "PutFile",
-      {syncFileName = file_name, fileType = "GRAPHIC_PNG", persistentFile = false, systemFile = false},
+      {syncFileName = "icon.png", fileType = "GRAPHIC_PNG", persistentFile = false, systemFile = false},
       "files/icon.png")
 
     self.mobileSession1:ExpectResponse(CorIdPutFile, { success = true, resultCode = "SUCCESS"})
@@ -111,9 +113,9 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
-runner.Step("RAI, PTU", commonSendLocation.rai_ptu)
-runner.Step("Activate App", commonSendLocation.activate_app)
-runner.Step("Upload file", put_file, {"icon.png"})
+runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
+runner.Step("Activate App", commonSendLocation.activateApp)
+runner.Step("Upload file", put_file)
 
 runner.Title("Test")
 runner.Step("SendLocation - all params", send_location, { request_params })
