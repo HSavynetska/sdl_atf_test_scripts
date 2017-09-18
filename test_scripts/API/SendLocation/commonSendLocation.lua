@@ -106,7 +106,7 @@ local function ptu(self, id, pUpdateFunction)
         local mobileSession = commonSendLocation.getMobileSession(id, self)
         mobileSession:ExpectNotification("OnSystemRequest", { requestType = "PROPRIETARY" })
         :Do(function(_, d2)
-            -- print("App ".. id .. " was used for PTU")
+            print("App ".. id .. " was used for PTU")
             RAISE_EVENT(event, event, "PTU event")
             checkIfPTSIsSentAsBinary(d2.binaryData)
             local corIdSystemRequest = mobileSession:SendRPC("SystemRequest", { requestType = "PROPRIETARY", fileName = policy_file_name }, ptu_file_name)
@@ -177,7 +177,7 @@ function commonSendLocation.getHMIAppId(pAppId)
 end
 
 function commonSendLocation.getMobileSession(pAppId, self)
-  self, pAppId = commonSendLocation.getSelfAndParams(pUpdateFunction, self)
+  self, pAppId = commonSendLocation.getSelfAndParams(pAppId, self)
   if not pAppId then pAppId = 1 end
   return self["mobileSession" .. pAppId]
 end
@@ -223,7 +223,7 @@ function commonSendLocation.registerApplicationWithPTU(pAppId, pUpdateFunction, 
     end)
 end
 
-function commonSendLocation.rai_n(id, self)
+function commonSendLocation.registerApplication(id, self)
   self, id = commonSendLocation.getSelfAndParams(id, self)
   if not id then id = 1 end
   self["mobileSession" .. id] = mobile_session.MobileSession(self, self.mobileConnection)

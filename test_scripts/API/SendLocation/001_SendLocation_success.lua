@@ -28,13 +28,17 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/common_send_location')
+local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
 
 --[[ Local Variables ]]
 local request_params = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
-    addressLines = "Detroit city",
+    addressLines = 
+    { 
+        "line1",
+        "line2",
+    }, 
     address = {
         countryName = "countryName",
         countryCode = "countryName",
@@ -59,11 +63,6 @@ local request_params = {
     },
     locationName = "location Name",
     locationDescription = "location Description",
-    addressLines = 
-    { 
-        "line1",
-        "line2",
-    }, 
     phoneNumber = "phone Number",
     deliveryMode = "PROMPT",
     locationImage = 
