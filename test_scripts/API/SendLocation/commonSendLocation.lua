@@ -23,6 +23,38 @@ local commonSendLocation = {}
 commonSendLocation.timeout = 2000
 commonSendLocation.minTimeout = 500
 commonSendLocation.DEFAULT = "Default"
+commonSendLocation.successResultCodes = {
+  "SUCCESS",
+  "RETRY",
+  "WARNINGS",
+  "SAVED"
+}
+
+commonSendLocation.failureResultCodes = {
+  "UNSUPPORTED_REQUEST",
+  "UNSUPPORTED_RESOURCE",
+  "DISALLOWED",
+  "REJECTED",
+  "ABORTED",
+  "IGNORED",
+  "IN_USE" ,
+  "DATA_NOT_AVAILABLE",
+  "TIMED_OUT",
+  "INVALID_DATA",
+  "CHAR_LIMIT_EXCEEDED",
+  "INVALID_ID",
+  "DUPLICATE_NAME",
+  "APPLICATION_NOT_REGISTERED",
+  "WRONG_LANGUAGE",
+  "OUT_OF_MEMORY",
+  "TOO_MANY_PENDING_REQUESTS",
+  "NO_APPS_REGISTERED",
+  "NO_DEVICES_CONNECTED",
+  "GENERIC_ERROR",
+  "USER_DISALLOWED",
+  "TRUNCATED_DATA",
+  "READ_ONLY"
+}
 
 local function allowSDL(self)
   self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality",
