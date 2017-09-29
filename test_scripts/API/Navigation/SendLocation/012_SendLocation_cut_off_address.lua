@@ -33,38 +33,79 @@ local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLoca
 --[[ Local Variables ]]
 local request_params = {
     longitudeDegrees = 1.1,
-    latitudeDegrees = 1.1
+    latitudeDegrees = 1.1,
+    addressLines = 
+    { 
+        "line1",
+        "line2",
+    }, 
+    address = {
+        countryName = "countryName",
+        countryCode = "countryName",
+        postalCode = "postalCode",
+        administrativeArea = "administrativeArea",
+        subAdministrativeArea = "subAdministrativeArea",
+        locality = "locality",
+        subLocality = "subLocality",
+        thoroughfare = "thoroughfare",
+        subThoroughfare = "subThoroughfare"
+    },
+    timeStamp = {
+        millisecond = 0,
+        second = 40,
+        minute = 30,
+        hour = 14,
+        day = 25,
+        month = 5,
+        year = 2017,
+        tz_hour = 5,
+        tz_minute = 30
+    },
+    locationName = "location Name",
+    locationDescription = "location Description",
+    phoneNumber = "phone Number",
+    deliveryMode = "PROMPT",
+    locationImage = 
+    { 
+        value = "icon.png",
+        imageType = "DYNAMIC",
+    }
 }
 
 --[[ Local Functions ]]
-local function sendLocationSuccess(params, resultCodeValue, self)
+local function send_location(params, self)
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
+
+    params.appID = commonSendLocation.getHMIAppId()
+    local deviceID = commonSendLocation.getDeviceMAC()
+    params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
+        .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
+
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        self.hmiConnection:SendResponse(data.id, data.method, resultCodeValue, {})
+        --hmi side: sending Navigation.SendLocation response
+        self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
 
-    self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = resultCodeValue })
-end
-
-local function sendLocationFailure(params, resultCodeValue, self)
-    local cid = self.mobileSession1:SendRPC("SendLocation", params)
-
-    EXPECT_HMICALL("Navigation.SendLocation", params)
-    :Do(function(_,data)
-        self.hmiConnection:SendError(data.id, data.method, resultCodeValue, resultCodeValue)
-    end)
-
-    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = resultCodeValue })
+    self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
     :ValidIf (function(_,data)
         if data.payload.info then
-            return true
+            print("SDL sent redundant info parameter to mobile App ")
+            return false
         else 
-            print("SDL doesn't resend info parameter to mobile App.")
             return true
         end
     end)
+end
+
+local function put_file(self)
+    local CorIdPutFile = self.mobileSession1:SendRPC(
+      "PutFile",
+      {syncFileName = "icon.png", fileType = "GRAPHIC_PNG", persistentFile = false, systemFile = false},
+      "files/icon.png")
+
+    self.mobileSession1:ExpectResponse(CorIdPutFile, { success = true, resultCode = "SUCCESS"})
 end
 
 --[[ Scenario ]]
@@ -73,16 +114,10 @@ runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
--- runner.Step("Upload file", put_file)
+runner.Step("Upload file", put_file)
 
 runner.Title("Test")
-for _, resultCodeValue in pairs(commonSendLocation.successResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationSuccess, {request_params, resultCodeValue})
-end
-
-for _, resultCodeValue in pairs(commonSendLocation.failureResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationFailure, {request_params, resultCodeValue})
-end
+runner.Step("SendLocation - all params", send_location, { request_params })
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonSendLocation.postconditions)

@@ -25,33 +25,35 @@ commonSendLocation.minTimeout = 500
 commonSendLocation.DEFAULT = "Default"
 commonSendLocation.successResultCodes = {
   "SUCCESS",
-  "RETRY",
-  "WARNINGS",
   "SAVED"
 }
 
 commonSendLocation.failureResultCodes = {
-  "UNSUPPORTED_REQUEST",
   "UNSUPPORTED_RESOURCE",
   "DISALLOWED",
   "REJECTED",
   "ABORTED",
-  "IGNORED",
+  "INVALID_DATA",
+  "APPLICATION_NOT_REGISTERED",
+  "NO_APPS_REGISTERED",   -- this code is equal to APPLICATION_NOT_REGISTERED in mobile API
+  "NO_DEVICES_CONNECTED", -- this code is equal to APPLICATION_NOT_REGISTERED in mobile API
+  "OUT_OF_MEMORY",
+  "TOO_MANY_PENDING_REQUESTS",
+  "GENERIC_ERROR",
+  "USER_DISALLOWED"
+}
+
+commonSendLocation.unexpectedResultCodes = {
+  "WARNINGS",
+  "RETRY",
+  "UNSUPPORTED_REQUEST",
   "IN_USE" ,
   "DATA_NOT_AVAILABLE",
   "TIMED_OUT",
-  "INVALID_DATA",
   "CHAR_LIMIT_EXCEEDED",
   "INVALID_ID",
   "DUPLICATE_NAME",
-  "APPLICATION_NOT_REGISTERED",
   "WRONG_LANGUAGE",
-  "OUT_OF_MEMORY",
-  "TOO_MANY_PENDING_REQUESTS",
-  "NO_APPS_REGISTERED",
-  "NO_DEVICES_CONNECTED",
-  "GENERIC_ERROR",
-  "USER_DISALLOWED",
   "TRUNCATED_DATA",
   "READ_ONLY"
 }
@@ -177,6 +179,11 @@ end
 function commonSendLocation.backupHMICapabilities()
   local hmiCapabilitiesFile = commonFunctions:read_parameter_from_smart_device_link_ini("HMICapabilities")
   commonPreconditions:BackupFile(hmiCapabilitiesFile)
+end
+
+function commonSendLocation.delayedExp(timeout)
+  if not timeout then timeout = commonSendLocation.timeout end
+  commonTestCases:DelayedExp(commonSendLocation.timeout)
 end
 
 function commonSendLocation.getDeviceMAC()
