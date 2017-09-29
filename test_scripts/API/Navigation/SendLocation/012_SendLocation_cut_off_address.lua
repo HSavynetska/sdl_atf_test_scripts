@@ -4,10 +4,10 @@
 -- Item: Use Case 1: Main Flow
 --
 -- Requirement summary:
--- SendLocation with address, longitudeDegrees, latitudeDegrees, deliveryMode and other parameters
+-- Cut off parameter "address" from request to HMI in case it is empty  
 --
 -- Description:
--- App sends SendLocation will all available parameters.
+-- App sends SendLocation with empty address parameter.
 
 -- Pre-conditions:
 -- a. HMI and SDL are started
@@ -22,13 +22,13 @@
 -- SDL checks if Navi interface is available on HMI
 -- SDL checks if SendLocation is allowed by Policies
 -- SDL checks if deliveryMode is allowed by Policies
--- SDL transfers the request with allowed parameters to HMI
+-- SDL transfers the request without address parameter to HMI
 -- SDL receives response from HMI
 -- SDL transfers response to mobile app
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/SendLocation/commonSendLocation')
 
 --[[ Local Variables ]]
 local request_params = {
@@ -39,17 +39,7 @@ local request_params = {
         "line1",
         "line2",
     }, 
-    address = {
-        countryName = "countryName",
-        countryCode = "countryName",
-        postalCode = "postalCode",
-        administrativeArea = "administrativeArea",
-        subAdministrativeArea = "subAdministrativeArea",
-        locality = "locality",
-        subLocality = "subLocality",
-        thoroughfare = "thoroughfare",
-        subThoroughfare = "subThoroughfare"
-    },
+    address = {},
     timeStamp = {
         millisecond = 0,
         second = 40,
@@ -82,10 +72,17 @@ local function send_location(params, self)
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
 
-    EXPECT_HMICALL("Navigation.SendLocation", params)
+    EXPECT_HMICALL("Navigation.SendLocation")
     :Do(function(_,data)
         --hmi side: sending Navigation.SendLocation response
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+    end)
+    :ValidIf(function (_, data)
+        if (data.params.address ~= nil) then
+            self:FailTestCase("address is present in SDL's request")
+        else
+            return true
+        end
     end)
 
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
