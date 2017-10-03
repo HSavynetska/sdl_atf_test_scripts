@@ -83,7 +83,6 @@ local function sendLocation(params, self)
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        --hmi side: sending Navigation.SendLocation response
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
 

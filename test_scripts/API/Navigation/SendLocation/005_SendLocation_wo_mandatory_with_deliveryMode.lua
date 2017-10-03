@@ -70,7 +70,6 @@ local function sendLocation(params, parametersToCut, self)
     params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
-
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Times(0)
 

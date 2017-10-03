@@ -26,8 +26,6 @@
 local runner = require('user_modules/script_runner')
 local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
---[[ Local Variables ]]
-
 --[[ Local Functions ]]
 local function sendLocation(self)
     self.mobileSession1.correlationId = self.mobileSession1.correlationId + 1

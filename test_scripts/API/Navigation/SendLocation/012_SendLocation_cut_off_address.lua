@@ -74,7 +74,6 @@ local function send_location(params, self)
 
     EXPECT_HMICALL("Navigation.SendLocation")
     :Do(function(_,data)
-        --hmi side: sending Navigation.SendLocation response
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
     :ValidIf(function (_, data)
