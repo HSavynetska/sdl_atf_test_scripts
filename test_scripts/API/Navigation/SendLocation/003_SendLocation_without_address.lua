@@ -4,7 +4,7 @@
 -- Item: Use Case 1: Main Flow
 --
 -- Requirement summary:
--- App requests SendLocation without address and with longitudeDegrees, latitudeDegrees, deliveryMode 
+-- App requests SendLocation without address and with longitudeDegrees, latitudeDegrees, deliveryMode
 -- and other valid and allowed parameters
 --
 -- Description:
@@ -29,10 +29,10 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
-local request_params = {
+local requestParams = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
     timeStamp = {
@@ -50,8 +50,8 @@ local request_params = {
     locationDescription = "location Description",
     phoneNumber = "phone Number",
     deliveryMode = "PROMPT",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value = "icon.png",
         imageType = "DYNAMIC",
     }
@@ -69,28 +69,17 @@ local function sendLocation(params, self)
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        --hmi side: sending Navigation.SendLocation response
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
 
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
     :ValidIf (function(_,data)
         if data.payload.info then
-            print("SDL sent redundant info parameter to mobile App ")
-            return false
-        else 
+            return false, "SDL sent redundant info parameter to mobile App "
+        else
             return true
         end
     end)
-end
-
-local function put_file(self)
-    local CorIdPutFile = self.mobileSession1:SendRPC(
-      "PutFile",
-      {syncFileName = "icon.png", fileType = "GRAPHIC_PNG", persistentFile = false, systemFile = false},
-      "files/icon.png")
-
-    self.mobileSession1:ExpectResponse(CorIdPutFile, { success = true, resultCode = "SUCCESS"})
 end
 
 --[[ Scenario ]]
@@ -99,10 +88,10 @@ runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
-runner.Step("Upload file", put_file)
+runner.Step("Upload file", commonSendLocation.putFile, {"icon.png"})
 
 runner.Title("Test")
-runner.Step("SendLocation without address parameter", sendLocation, {request_params})
+runner.Step("SendLocation without address parameter", sendLocation, {requestParams})
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonSendLocation.postconditions)

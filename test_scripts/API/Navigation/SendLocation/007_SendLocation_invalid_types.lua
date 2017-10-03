@@ -23,17 +23,17 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 local requestParams = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
-    addressLines = 
-    { 
+    addressLines =
+    {
         "line1",
         "line2",
-    }, 
+    },
     address = {
         countryName = "countryName",
         countryCode = "countryName",
@@ -60,8 +60,8 @@ local requestParams = {
     locationDescription = "location Description",
     phoneNumber = "phone Number",
     deliveryMode = "PROMPT",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value = "icon.png",
         imageType = "DYNAMIC",
     }
@@ -98,10 +98,12 @@ for key,value in pairs(requestParams) do
         for subKey,subValue in pairs(value) do
             parametersToSend[key][subKey] = replaceType(subValue)
             runner.Title("Test")
-            runner.Step("SendLocation-invalid-type-of-" .. tostring(subKey), sendLocation, {parametersToSend})
+            runner.Step("SendLocation-invalid-type-of-" .. tostring(key) .. "-" .. tostring(subKey),
+                        sendLocation,
+                        {parametersToSend})
         end
     else
-        parametersToSend[key] = replaceType(subValue)
+        parametersToSend[key] = replaceType(value)
         runner.Title("Test")
         runner.Step("SendLocation-invalid-type-of-" .. tostring(key), sendLocation, {parametersToSend})
     end

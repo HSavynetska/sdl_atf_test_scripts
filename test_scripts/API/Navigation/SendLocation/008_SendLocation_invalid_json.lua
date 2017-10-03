@@ -24,7 +24,7 @@
 
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 
@@ -36,15 +36,15 @@ local function sendLocation(self)
         frameInfo        = 0,
         rpcType          = 0,
         rpcFunctionId    = 39,
-        rpcCorrelationId = self.mobileSession1.correlationId,    
-        --<<-- Missing :
-        payload          = '{"longitudeDegrees" 1.1, "latitudeDegrees":1.1}'
+        rpcCorrelationId = self.mobileSession1.correlationId,
+        payload          = '{"longitudeDegrees" 1.1, "latitudeDegrees":1.1}' --<<-- Missing ":"
     }
     self.mobileSession1:Send(msg)
 
-    EXPECT_HMICALL("Navigation.SendLocation", params):Times(0)
+    EXPECT_HMICALL("Navigation.SendLocation"):Times(0)
 
-    self.mobileSession1:ExpectResponse(self.mobileSession1.correlationId, { success = false, resultCode = "INVALID_DATA" })
+    self.mobileSession1:ExpectResponse(self.mobileSession1.correlationId,
+        { success = false, resultCode = "INVALID_DATA"})
 
     commonSendLocation.delayedExp()
 end

@@ -24,7 +24,7 @@
 
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 local stringParams = {
@@ -41,10 +41,10 @@ local stringParams = {
     },
     locationName ="a",
     locationDescription ="a",
-    addressLines = {"hello"}, 
+    addressLines = {"hello"},
     phoneNumber ="123456789",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value ="icon.png",
     }
 }
@@ -55,7 +55,7 @@ local function sendLocation(params, self)
     params["latitudeDegrees"] = 60
     params["deliveryMode"] = "PROMPT"
     params["locationImage"]["imageType"] = "DYNAMIC"
-    
+
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
     EXPECT_HMICALL("Navigation.SendLocation"):Times(0)
@@ -65,30 +65,19 @@ local function sendLocation(params, self)
     commonSendLocation.delayedExp()
 end
 
-local function put_file(self)
-    local cid = self.mobileSession1:SendRPC("PutFile", {
-                    syncFileName = "icon.png", 
-                    fileType = "GRAPHIC_PNG", 
-                    persistentFile = false, 
-                    systemFile = false},
-                "files/icon.png")
-
-    self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS"})
-end
-
 --[[ Scenario ]]
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
-runner.Step("Upload file", put_file)
+runner.Step("Upload file", commonSendLocation.putFile, {"icon.png"})
 
 runner.Title("Test - empty strings")
 for key,value in pairs(stringParams) do
     local parametersToSend = stringParams
     if (type(value) == "table") then
-        for subKey,subValue in pairs(value) do
+        for subKey,_ in pairs(value) do
             parametersToSend[key][subKey] = ""
             runner.Step("SendLocation-invalid-type-of-" .. tostring(subKey), sendLocation, {parametersToSend})
         end
@@ -102,7 +91,7 @@ runner.Title("Test - whitespaces")
 for key,value in pairs(stringParams) do
     local parametersToSend = stringParams
     if (type(value) == "table") then
-        for subKey,subValue in pairs(value) do
+        for subKey,_ in pairs(value) do
             parametersToSend[key][subKey] = "   "
             runner.Step("SendLocation-invalid-type-of-" .. tostring(subKey), sendLocation, {parametersToSend})
         end

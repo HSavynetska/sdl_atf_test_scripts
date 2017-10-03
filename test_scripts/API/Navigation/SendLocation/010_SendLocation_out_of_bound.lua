@@ -24,7 +24,7 @@
 
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 local outOfBoundLongitude = {-180.1, 180.1}
@@ -33,11 +33,11 @@ local outOfBoundLatitude = {-90.1, 90.1}
 local requestParams = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
-    addressLines = 
-    { 
+    addressLines =
+    {
         "line1",
         "line2",
-    }, 
+    },
     address = {
         countryName = "countryName",
         countryCode = "countryName",

@@ -24,7 +24,7 @@
 
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 local lowerBoundRequest = {
@@ -53,11 +53,11 @@ local lowerBoundRequest = {
     },
     locationName ="a",
     locationDescription ="a",
-    addressLines = {"a"}, 
+    addressLines = {"a"},
     phoneNumber ="1",
     deliveryMode = "PROMPT",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value ="a",
         imageType ="DYNAMIC",
     }
@@ -89,16 +89,16 @@ local upperBoundRequest = {
     },
     locationName =string.rep("a", 500),
     locationDescription = string.rep("a", 500),
-    addressLines = { 
+    addressLines = {
         string.rep("a", 500),
         string.rep("a", 500),
         string.rep("a", 500),
         string.rep("a", 500)
-    }, 
+    },
     phoneNumber =string.rep("a", 500),
     deliveryMode = "PROMPT",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value = string.rep("a", 251)  .. ".png",
         imageType = "DYNAMIC",
     }
@@ -126,21 +126,10 @@ local function sendLocation(params, self)
         if data.payload.info then
             print("SDL sent redundant info parameter to mobile App ")
             return false
-        else 
+        else
             return true
         end
     end)
-end
-
-local function put_file(fileName, self)
-    local cid = self.mobileSession1:SendRPC("PutFile", {
-                    syncFileName = fileName, 
-                    fileType = "GRAPHIC_PNG", 
-                    persistentFile = false, 
-                    systemFile = false},
-                "files/icon.png")
-
-    self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS"})
 end
 
 --[[ Scenario ]]
@@ -149,8 +138,8 @@ runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
-runner.Step("Upload file with lower bound name", put_file, {"a"})
-runner.Step("Upload file with upper bound name", put_file, {string.rep("a", 251)  .. ".png"})
+runner.Step("Upload file with lower bound name", commonSendLocation.putFile, {"a"})
+runner.Step("Upload file with upper bound name", commonSendLocation.putFile, {string.rep("a", 251)  .. ".png"})
 
 runner.Title("Test")
 runner.Step("SendLocation-lower-bound-of-all-params", sendLocation, {lowerBoundRequest})

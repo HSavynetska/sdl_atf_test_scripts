@@ -4,7 +4,7 @@
 -- Item: Use Case 1: Main Flow
 --
 -- Requirement summary:
--- UNSUPPORTED_RESOURCE in case Navi interface is not available on HMI 
+-- UNSUPPORTED_RESOURCE in case sendLocation is unsupported while Navigation interface is available on HMI
 --
 -- Description:
 -- App sends SendLocation will valid parameters but actually Navigation interface is unsupported.
@@ -28,18 +28,18 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 local hmi_values = require('user_modules/hmi_values')
 
 --[[ Local Variables ]]
 local requestParams = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
-    addressLines = 
-    { 
+    addressLines =
+    {
         "line1",
         "line2",
-    }, 
+    },
     address = {
         countryName = "countryName",
         countryCode = "countryName",

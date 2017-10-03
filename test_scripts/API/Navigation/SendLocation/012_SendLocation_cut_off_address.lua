@@ -4,7 +4,7 @@
 -- Item: Use Case 1: Main Flow
 --
 -- Requirement summary:
--- Cut off parameter "address" from request to HMI in case it is empty  
+-- Cut off parameter "address" from request to HMI in case it is empty
 --
 -- Description:
 -- App sends SendLocation with empty address parameter.
@@ -28,17 +28,17 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/Navigation/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
 local request_params = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1,
-    addressLines = 
-    { 
+    addressLines =
+    {
         "line1",
         "line2",
-    }, 
+    },
     address = {},
     timeStamp = {
         millisecond = 0,
@@ -55,8 +55,8 @@ local request_params = {
     locationDescription = "location Description",
     phoneNumber = "phone Number",
     deliveryMode = "PROMPT",
-    locationImage = 
-    { 
+    locationImage =
+    {
         value = "icon.png",
         imageType = "DYNAMIC",
     }
@@ -90,19 +90,10 @@ local function send_location(params, self)
         if data.payload.info then
             print("SDL sent redundant info parameter to mobile App ")
             return false
-        else 
+        else
             return true
         end
     end)
-end
-
-local function put_file(self)
-    local CorIdPutFile = self.mobileSession1:SendRPC(
-      "PutFile",
-      {syncFileName = "icon.png", fileType = "GRAPHIC_PNG", persistentFile = false, systemFile = false},
-      "files/icon.png")
-
-    self.mobileSession1:ExpectResponse(CorIdPutFile, { success = true, resultCode = "SUCCESS"})
 end
 
 --[[ Scenario ]]
@@ -111,7 +102,7 @@ runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
-runner.Step("Upload file", put_file)
+runner.Step("Upload file", commonSendLocation.putFile, {"icon.png"})
 
 runner.Title("Test")
 runner.Step("SendLocation - all params", send_location, { request_params })

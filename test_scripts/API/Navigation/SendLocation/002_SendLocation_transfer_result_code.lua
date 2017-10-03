@@ -28,10 +28,10 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/SendLocation/commonSendLocation')
+local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
-local request_params = {
+local requestParams = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1
 }
@@ -60,7 +60,7 @@ local function sendLocationFailure(params, resultCodeValue, self)
     :ValidIf (function(_,data)
         if data.payload.info then
             return true
-        else 
+        else
             print("SDL doesn't resend info parameter to mobile App.")
             return true
         end
@@ -84,23 +84,22 @@ runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
--- runner.Step("Upload file", put_file)
 
 runner.Title("Test positive result codes")
 for _, resultCodeValue in pairs(commonSendLocation.successResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationSuccess, {request_params, resultCodeValue})
+    runner.Step("SendLocation - " .. resultCodeValue, sendLocationSuccess, {requestParams, resultCodeValue})
 end
 
 runner.Title("Test negative result codes")
 for _, resultCodeValue in pairs(commonSendLocation.failureResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationFailure, {request_params, resultCodeValue})
+    runner.Step("SendLocation - " .. resultCodeValue, sendLocationFailure, {requestParams, resultCodeValue})
 end
 
 runner.Title("Test not applicable for SendLocation result codes")
 for _, resultCodeValue in pairs(commonSendLocation.unexpectedResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, 
-        sendLocationUnexpectedResponseFromHMI, 
-        {request_params, resultCodeValue})
+    runner.Step("SendLocation - " .. resultCodeValue,
+        sendLocationUnexpectedResponseFromHMI,
+        {requestParams, resultCodeValue})
 end
 
 runner.Title("Postconditions")
