@@ -66,7 +66,6 @@ local function sendLocation(params, self)
     params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
-
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})

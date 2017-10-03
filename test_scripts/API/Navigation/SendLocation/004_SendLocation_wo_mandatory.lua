@@ -81,7 +81,7 @@ local function sendLocation(params, parametersToCut, self)
     params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
-    EXPECT_HMICALL("Navigation.SendLocation", params)
+    EXPECT_HMICALL("Navigation.SendLocation")
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "INVALID_DATA" })

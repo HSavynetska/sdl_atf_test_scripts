@@ -61,8 +61,7 @@ local function sendLocationFailure(params, resultCodeValue, self)
         if data.payload.info then
             return true
         else
-            print("SDL doesn't resend info parameter to mobile App.")
-            return true
+            return false, "SDL doesn't resend info parameter to mobile App."
         end
     end)
 end

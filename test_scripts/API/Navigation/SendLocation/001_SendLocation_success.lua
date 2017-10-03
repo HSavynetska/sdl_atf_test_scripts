@@ -81,18 +81,15 @@ local function sendLocation(params, self)
     params.locationImage.value = commonSendLocation.getPathToSDL() .. "storage/"
         .. commonSendLocation.getMobileAppId(1) .. "_" .. deviceID .. "/icon.png"
 
-
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        --hmi side: sending Navigation.SendLocation response
         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
 
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
     :ValidIf (function(_,data)
         if data.payload.info then
-            print("SDL sent redundant info parameter to mobile App ")
-            return false
+            return false, "SDL sent redundant info parameter to mobile App "
         else
             return true
         end
