@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 -- User story: https://github.com/smartdevicelink/sdl_requirements/issues/24
 -- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/TRS/embedded_navi/SendLocation_TRS.md
--- Item: Use Case 1: Main Flow (Exception 1: wrong json)
+-- Item: Use Case 1: Main Flow (Exception 1: empty strings or whitespace as only symbol in string parameter)
 --
 -- Requirement summary:
 -- App requests SendLocation where string parameters are empty or with whitespaces

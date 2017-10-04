@@ -1,7 +1,7 @@
 ---------------------------------------------------------------------------------------------------
 -- User story: https://github.com/smartdevicelink/sdl_requirements/issues/24
 -- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/TRS/embedded_navi/SendLocation_TRS.md
--- Item: Use Case 1: Main Flow
+-- Item: Use Case 1: Main Flow (Alternative flow 4)
 --
 -- Requirement summary:
 -- App requests SendLocation without deliveryMode and with other allowed and valid parameters

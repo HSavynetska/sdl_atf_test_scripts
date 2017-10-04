@@ -7,7 +7,7 @@
 -- SendLocation with address, longitudeDegrees, latitudeDegrees, deliveryMode and other parameters
 --
 -- Description:
--- App sends SendLocation will all available parameters.
+-- App sends SendLocation with all available parameters.
 
 -- Pre-conditions:
 -- a. HMI and SDL are started

@@ -1,13 +1,13 @@
 ---------------------------------------------------------------------------------------------------
 -- User story: https://github.com/smartdevicelink/sdl_requirements/issues/24
 -- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/TRS/embedded_navi/SendLocation_TRS.md
--- Item: Use Case 1: Main Flow (Exception 1: wrong json)
+-- Item: Use Case 1: Main Flow (all parameters has boundary values)
 --
 -- Requirement summary:
--- App requests SendLocation without deliveryMode and with other allowed and valid parameters
+-- App requests SendLocation with boundary values of all parameters
 --
 -- Description:
--- App sends SendLocation with invalid payload (invalid json)
+-- App sends SendLocation with boundary values of params
 
 -- Pre-conditions:
 -- a. HMI and SDL are started

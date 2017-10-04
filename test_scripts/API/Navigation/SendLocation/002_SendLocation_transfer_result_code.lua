@@ -1,13 +1,13 @@
 ---------------------------------------------------------------------------------------------------
 -- User story: https://github.com/smartdevicelink/sdl_requirements/issues/24
 -- Use case: https://github.com/smartdevicelink/sdl_requirements/blob/master/detailed_docs/TRS/embedded_navi/SendLocation_TRS.md
--- Item: Use Case 1: Main Flow
+-- Item: Use Case 1: Main Flow (Alternative flow 1)
 --
 -- Requirement summary:
--- SendLocation with address, longitudeDegrees, latitudeDegrees, deliveryMode and other parameters
+-- SDL transfer HMI's result code to Mobile
 --
 -- Description:
--- App sends SendLocation will all available parameters.
+-- App sends SendLocation will valid parameters, Navi interface is working.
 
 -- Pre-conditions:
 -- a. HMI and SDL are started
