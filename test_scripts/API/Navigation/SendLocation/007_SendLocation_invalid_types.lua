@@ -85,6 +85,7 @@ runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
 
+runner.Title("Test")
 for key,value in pairs(requestParams) do
     local parametersToSend = requestParams
     local function replaceType(val)
@@ -97,14 +98,12 @@ for key,value in pairs(requestParams) do
     if (type(value) == "table") then
         for subKey,subValue in pairs(value) do
             parametersToSend[key][subKey] = replaceType(subValue)
-            runner.Title("Test")
             runner.Step("SendLocation-invalid-type-of-" .. tostring(key) .. "-" .. tostring(subKey),
                         sendLocation,
                         {parametersToSend})
         end
     else
         parametersToSend[key] = replaceType(value)
-        runner.Title("Test")
         runner.Step("SendLocation-invalid-type-of-" .. tostring(key), sendLocation, {parametersToSend})
     end
 end
