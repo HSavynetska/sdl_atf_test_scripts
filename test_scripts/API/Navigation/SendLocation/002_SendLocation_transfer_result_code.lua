@@ -48,15 +48,19 @@ local function sendLocationSuccess(params, resultCodeValue, self)
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = resultCodeValue })
 end
 
-local function sendLocationFailure(params, resultCodeValue, self)
+local function sendLocationFailure(params, resultCodeMap, self)
     local cid = self.mobileSession1:SendRPC("SendLocation", params)
+
+    local hmiCode = resultCodeMap.hmiCode
+    local mobileCode = resultCodeMap.mobileCode
+    if not mobileCode then mobileCode = hmiCode end
 
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        self.hmiConnection:SendError(data.id, data.method, resultCodeValue, resultCodeValue)
+        self.hmiConnection:SendError(data.id, data.method, hmiCode, hmiCode)
     end)
 
-    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = resultCodeValue })
+    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = mobileCode })
     :ValidIf (function(_,data)
         if data.payload.info then
             return true
@@ -86,17 +90,17 @@ runner.Step("Activate App", commonSendLocation.activateApp)
 
 runner.Title("Test positive result codes")
 for _, resultCodeValue in pairs(commonSendLocation.successResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationSuccess, {requestParams, resultCodeValue})
+    runner.Step("SendLocation " .. resultCodeValue, sendLocationSuccess, {requestParams, resultCodeValue})
 end
 
 runner.Title("Test negative result codes")
-for _, resultCodeValue in pairs(commonSendLocation.failureResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue, sendLocationFailure, {requestParams, resultCodeValue})
+for _, resultCodeMap in pairs(commonSendLocation.failureResultCodes) do
+    runner.Step("SendLocation " .. resultCodeMap.hmiCode, sendLocationFailure, {requestParams, resultCodeMap})
 end
 
 runner.Title("Test not applicable for SendLocation result codes")
 for _, resultCodeValue in pairs(commonSendLocation.unexpectedResultCodes) do
-    runner.Step("SendLocation - " .. resultCodeValue,
+    runner.Step("SendLocation " .. resultCodeValue,
         sendLocationUnexpectedResponseFromHMI,
         {requestParams, resultCodeValue})
 end

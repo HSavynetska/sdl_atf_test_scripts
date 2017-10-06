@@ -29,18 +29,18 @@ commonSendLocation.successResultCodes = {
 }
 
 commonSendLocation.failureResultCodes = {
-  "UNSUPPORTED_RESOURCE",
-  "DISALLOWED",
-  "REJECTED",
-  "ABORTED",
-  "INVALID_DATA",
-  "APPLICATION_NOT_REGISTERED",
-  "NO_APPS_REGISTERED",   -- this code is equal to APPLICATION_NOT_REGISTERED in mobile API
-  "NO_DEVICES_CONNECTED", -- this code is equal to APPLICATION_NOT_REGISTERED in mobile API
-  "OUT_OF_MEMORY",
-  "TOO_MANY_PENDING_REQUESTS",
-  "GENERIC_ERROR",
-  "USER_DISALLOWED"
+  { hmiCode = "UNSUPPORTED_RESOURCE" },
+  { hmiCode = "DISALLOWED" },
+  { hmiCode = "REJECTED" },
+  { hmiCode = "ABORTED" },
+  { hmiCode = "INVALID_DATA" },
+  { hmiCode = "APPLICATION_NOT_REGISTERED" },
+  { hmiCode = "NO_APPS_REGISTERED", mobileCode = "APPLICATION_NOT_REGISTERED" },
+  { hmiCode = "NO_DEVICES_CONNECTED", mobileCode = "APPLICATION_NOT_REGISTERED" },
+  { hmiCode = "OUT_OF_MEMORY" },
+  { hmiCode = "TOO_MANY_PENDING_REQUESTS" },
+  { hmiCode = "GENERIC_ERROR" },
+  { hmiCode = "USER_DISALLOWED" }
 }
 
 commonSendLocation.unexpectedResultCodes = {
