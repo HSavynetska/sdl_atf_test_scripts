@@ -73,7 +73,7 @@ end
 local function pUpdateFunction(pTbl)
   local params = pTbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters
   for index, value in pairs(params) do
-    if isContain(disallowedParams, value) then params[index] = nil end
+    if isContain(disallowedParams, value) then table.remove(params, index) end
   end
 end
 
