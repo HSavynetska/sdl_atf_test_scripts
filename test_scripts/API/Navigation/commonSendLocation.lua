@@ -14,6 +14,10 @@ local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
 
+local mobile_api_loader = require("modules/api_loader")
+local mobile_api = mobile_api_loader.init("data/MOBILE_API.xml")
+local mobile_api_schema = mobile_api.interface["Ford Sync RAPI"]
+
 --[[ Local Variables ]]
 local ptu_table = {}
 local hmiAppIds = {}
@@ -57,6 +61,14 @@ commonSendLocation.unexpectedResultCodes = {
   "TRUNCATED_DATA",
   "READ_ONLY"
 }
+
+local function getAvailableParams()
+  local out = {}
+  for k in pairs(mobile_api_schema.type["request"].functions["SendLocation"].param) do
+    table.insert(out, k)
+  end
+  return out
+end
 
 local function allowSDL(self)
   self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality",
@@ -117,8 +129,9 @@ local function ptu(self, id, pUpdateFunction)
       getPTUFromPTS(ptu_table)
       local function updatePTU(tbl)
         tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters = {}
-        tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[1] = "longitudeDegrees"
-        tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters[2] = "latitudeDegrees"
+        for _, v in pairs(getAvailableParams()) do
+          table.insert(tbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters, v)
+        end
         tbl.policy_table.app_policies[commonSendLocation.getMobileAppId(id)] = commonSendLocation.getSendLocationConfig()
       end
       updatePTU(ptu_table)
@@ -156,7 +169,7 @@ local function ptu(self, id, pUpdateFunction)
         :Times(AtMost(1))
       end
     end)
-  os.remove(ptu_file_name)
+  -- os.remove(ptu_file_name)
 end
 
 function commonSendLocation.preconditions()
