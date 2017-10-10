@@ -443,4 +443,15 @@ function commonSendLocation.printResultCodes(pResultCodes)
   printItem(pResultCodes.unexpected)
 end
 
+function commonSendLocation.filterTable(pSourceTbl, pValuesTbl)
+  local i = 1
+  while i <= #pSourceTbl do
+    if isContain(pValuesTbl, pSourceTbl[i]) then
+      table.remove(pSourceTbl, i)
+    else
+      i = i + 1
+    end
+  end
+end
+
 return commonSendLocation

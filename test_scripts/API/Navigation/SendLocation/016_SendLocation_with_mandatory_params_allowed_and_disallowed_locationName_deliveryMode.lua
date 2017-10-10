@@ -39,13 +39,6 @@ local requestParams = {
 local disallowedParams = { "deliveryMode", "locationName" }
 
 --[[ Local Functions ]]
-local function isContain(pTbl, pValue)
-  for _, v in pairs(pTbl) do
-    if v == pValue then return true end
-  end
-  return false
-end
-
 local function sendLocation(self)
   local mobileSession = commonSendLocation.getMobileSession(self, 1)
   local cid = self.mobileSession1:SendRPC("SendLocation", requestParams)
@@ -72,9 +65,7 @@ end
 
 local function pUpdateFunction(pTbl)
   local params = pTbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters
-  for index, value in pairs(params) do
-    if isContain(disallowedParams, value) then table.remove(params, index) end
-  end
+  commonSendLocation.filterTable(params, disallowedParams)
 end
 
 --[[ Scenario ]]

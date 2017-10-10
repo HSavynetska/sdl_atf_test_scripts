@@ -33,13 +33,15 @@ local requestParams = {
   deliveryMode = "PROMPT",
 }
 
+local disallowedParams = { "deliveryMode" }
+
 --[[ Local Functions ]]
 local function sendLocation(self)
   local mobileSession = commonSendLocation.getMobileSession(self, 1)
   local cid = self.mobileSession1:SendRPC("SendLocation", requestParams)
   EXPECT_HMICALL("Navigation.SendLocation", { longitudeDegrees = 1.1, latitudeDegrees = 1.1 })
   :Do(function(_, data)
-       self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS",
+      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS",
         { longitudeDegrees = 1.1, latitudeDegrees = 1.1 })
     end)
   :ValidIf(function(_, data)
@@ -54,9 +56,7 @@ end
 
 local function pUpdateFunction(pTbl)
   local params = pTbl.policy_table.functional_groupings.SendLocation.rpcs.SendLocation.parameters
-  for index, value in pairs(params) do
-    if ("deliveryMode" == value) then table.remove(params, index) end
-  end
+  commonSendLocation.filterTable(params, disallowedParams)
 end
 
 --[[ Scenario ]]
@@ -68,7 +68,7 @@ runner.Step("Activate App", commonSendLocation.activateApp)
 runner.Step("Upload file", commonSendLocation.putFile, { "icon.png" })
 
 runner.Title("Test")
-runner.Step("SendLocation with both mandatory params", sendLocation)
+runner.Step("SendLocation with both mandatory params and disallowed: deliveryMode", sendLocation)
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonSendLocation.postconditions)
