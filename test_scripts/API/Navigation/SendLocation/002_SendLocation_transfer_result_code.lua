@@ -34,8 +34,7 @@ local common = require('test_scripts/API/Navigation/commonSendLocation')
 local resultCodes = {
   success = common.getSuccessResultCodes("SendLocation"),
   failure = common.getFailureResultCodes("SendLocation"),
-  unexpected = common.getUnexpectedResultCodes("SendLocation"),
-  unmapped = common.getUnmappedResultCodes()
+  unexpected = common.getUnexpectedResultCodes("SendLocation")
 }
 
 local params = {
@@ -100,11 +99,6 @@ end
 
 runner.Title("Unexpected codes")
 for _, item in pairs(resultCodes.unexpected) do
-  runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationUnsuccess, { item, true })
-end
-
-runner.Title("Unmapped codes")
-for _, item in pairs(resultCodes.unmapped) do
   runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationUnsuccess, { item, true })
 end
 

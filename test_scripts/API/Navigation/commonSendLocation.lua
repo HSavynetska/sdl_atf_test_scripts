@@ -359,7 +359,7 @@ local function isContain(pTbl, pValue)
   return false
 end
 
-local function getKeysFromItemsTable(pTbl, pKey)
+function commonSendLocation.getKeysFromItemsTable(pTbl, pKey)
   local out = {}
   for _, item in pairs(pTbl) do
     if not isContain(out, item[pKey]) then
@@ -374,7 +374,7 @@ local function getResultCodesMap()
   for _, v in pairs(getHMIResultCodes()) do
     if isContain(getMobileResultCodes(), v) then
       table.insert(out, { mobile = v, hmi = v })
-    elseif isContain(getKeysFromItemsTable(nonDirectResultCodes, "hmi"), v) then
+    elseif isContain(commonSendLocation.getKeysFromItemsTable(nonDirectResultCodes, "hmi"), v) then
       for _, item in pairs(nonDirectResultCodes) do
         if item.hmi == v then
           table.insert(out, { mobile = item.mobile, hmi = item.hmi })
@@ -441,8 +441,6 @@ function commonSendLocation.printResultCodes(pResultCodes)
   printItem(pResultCodes.failure)
   print("Unexpected:")
   printItem(pResultCodes.unexpected)
-  print("Unmapped:")
-  printItem(pResultCodes.unmapped)
 end
 
 return commonSendLocation
