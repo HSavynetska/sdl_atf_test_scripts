@@ -28,82 +28,85 @@
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
-local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
+local common = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
-local requestParams = {
-    longitudeDegrees = 1.1,
-    latitudeDegrees = 1.1
+local resultCodes = {
+  success = common.getSuccessResultCodes("SendLocation"),
+  failure = common.getFailureResultCodes("SendLocation"),
+  unexpected = common.getUnexpectedResultCodes("SendLocation"),
+  unmapped = common.getUnmappedResultCodes()
+}
+
+local params = {
+  longitudeDegrees = 1.1,
+  latitudeDegrees = 1.1
 }
 
 --[[ Local Functions ]]
-local function sendLocationSuccess(params, resultCodeValue, self)
-    local cid = self.mobileSession1:SendRPC("SendLocation", params)
+local function sendLocationSuccess(pResultCodeMap, self)
+  local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
-    EXPECT_HMICALL("Navigation.SendLocation", params)
-    :Do(function(_,data)
-        self.hmiConnection:SendResponse(data.id, data.method, resultCodeValue, {})
+  EXPECT_HMICALL("Navigation.SendLocation", params)
+  :Do(function(_,data)
+      self.hmiConnection:SendResponse(data.id, data.method, pResultCodeMap.hmi, {})
     end)
 
-    self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = resultCodeValue })
+  self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = pResultCodeMap.mobile })
 end
 
-local function sendLocationFailure(params, resultCodeMap, self)
-    local cid = self.mobileSession1:SendRPC("SendLocation", params)
+local function sendLocationUnsuccess(pResultCodeMap, isUnsupported, self)
+  local cid = self.mobileSession1:SendRPC("SendLocation", params)
 
-    local hmiCode = resultCodeMap.hmiCode
-    local mobileCode = resultCodeMap.mobileCode
-    if not mobileCode then mobileCode = hmiCode end
-
-    EXPECT_HMICALL("Navigation.SendLocation", params)
-    :Do(function(_,data)
-        self.hmiConnection:SendError(data.id, data.method, hmiCode, hmiCode)
+  EXPECT_HMICALL("Navigation.SendLocation", params)
+  :Do(function(_,data)
+      self.hmiConnection:SendError(data.id, data.method, pResultCodeMap.hmi, "Error error")
     end)
 
-    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = mobileCode })
-    :ValidIf (function(_,data)
-        if data.payload.info then
-            return true
-        else
-            return false, "SDL doesn't resend info parameter to mobile App."
-        end
+  local appSuccess = false
+  local appResultCode = pResultCodeMap.mobile
+  if isUnsupported then
+    appResultCode = "GENERIC_ERROR"
+  end
+
+  self.mobileSession1:ExpectResponse(cid, { success = appSuccess, resultCode = appResultCode })
+  :ValidIf(function(_,data)
+      if not isUnsupported and not data.payload.info then
+        return false, "SDL doesn't resend info parameter to mobile App"
+      end
+      return true
     end)
-end
-
-local function sendLocationUnexpectedResponseFromHMI(params, resultCodeValue, self)
-    local cid = self.mobileSession1:SendRPC("SendLocation", params)
-
-    EXPECT_HMICALL("Navigation.SendLocation", params)
-    :Do(function(_,data)
-        self.hmiConnection:SendError(data.id, data.method, resultCodeValue, resultCodeValue)
-    end)
-
-    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "GENERIC_ERROR" })
 end
 
 --[[ Scenario ]]
 runner.Title("Preconditions")
-runner.Step("Clean environment", commonSendLocation.preconditions)
-runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
-runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
-runner.Step("Activate App", commonSendLocation.activateApp)
+runner.Step("Clean environment", common.preconditions)
+runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
+runner.Step("RAI, PTU", common.registerApplicationWithPTU)
+runner.Step("Activate App", common.activateApp)
 
-runner.Title("Test positive result codes")
-for _, resultCodeValue in pairs(commonSendLocation.successResultCodes) do
-    runner.Step("SendLocation " .. resultCodeValue, sendLocationSuccess, {requestParams, resultCodeValue})
+runner.Title("Test")
+runner.Step("Result Codes", common.printResultCodes, { resultCodes })
+
+runner.Title("Successful codes")
+for _, item in pairs(resultCodes.success) do
+  runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationSuccess, { item })
 end
 
-runner.Title("Test negative result codes")
-for _, resultCodeMap in pairs(commonSendLocation.failureResultCodes) do
-    runner.Step("SendLocation " .. resultCodeMap.hmiCode, sendLocationFailure, {requestParams, resultCodeMap})
+runner.Title("Erroneous codes")
+for _, item in pairs(resultCodes.failure) do
+  runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationUnsuccess, { item, false })
 end
 
-runner.Title("Test not applicable for SendLocation result codes")
-for _, resultCodeValue in pairs(commonSendLocation.unexpectedResultCodes) do
-    runner.Step("SendLocation " .. resultCodeValue,
-        sendLocationUnexpectedResponseFromHMI,
-        {requestParams, resultCodeValue})
+runner.Title("Unexpected codes")
+for _, item in pairs(resultCodes.unexpected) do
+  runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationUnsuccess, { item, true })
+end
+
+runner.Title("Unmapped codes")
+for _, item in pairs(resultCodes.unmapped) do
+  runner.Step("SendLocation with " .. item.hmi .. " resultCode", sendLocationUnsuccess, { item, true })
 end
 
 runner.Title("Postconditions")
-runner.Step("Stop SDL", commonSendLocation.postconditions)
+runner.Step("Stop SDL", common.postconditions)

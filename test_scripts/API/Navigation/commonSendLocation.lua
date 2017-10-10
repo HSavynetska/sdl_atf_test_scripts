@@ -18,6 +18,10 @@ local mobile_api_loader = require("modules/api_loader")
 local mobile_api = mobile_api_loader.init("data/MOBILE_API.xml")
 local mobile_api_schema = mobile_api.interface["Ford Sync RAPI"]
 
+local hmi_api_loader = require("modules/api_loader")
+local hmi_api = hmi_api_loader.init("data/HMI_API.xml")
+local hmi_api_schema = hmi_api.interface["Common"]
+
 --[[ Local Variables ]]
 local ptu_table = {}
 local hmiAppIds = {}
@@ -26,40 +30,18 @@ local commonSendLocation = {}
 
 commonSendLocation.timeout = 2000
 commonSendLocation.minTimeout = 500
-commonSendLocation.DEFAULT = "Default"
-commonSendLocation.successResultCodes = {
+
+local successCodes = {
   "SUCCESS",
+  "WARNINGS",
+  "WRONG_LANGUAGE",
+  "RETRY",
   "SAVED"
 }
 
-commonSendLocation.failureResultCodes = {
-  { hmiCode = "UNSUPPORTED_RESOURCE" },
-  { hmiCode = "DISALLOWED" },
-  { hmiCode = "REJECTED" },
-  { hmiCode = "ABORTED" },
-  { hmiCode = "INVALID_DATA" },
-  { hmiCode = "APPLICATION_NOT_REGISTERED" },
-  { hmiCode = "NO_APPS_REGISTERED", mobileCode = "APPLICATION_NOT_REGISTERED" },
-  { hmiCode = "NO_DEVICES_CONNECTED", mobileCode = "APPLICATION_NOT_REGISTERED" },
-  { hmiCode = "OUT_OF_MEMORY" },
-  { hmiCode = "TOO_MANY_PENDING_REQUESTS" },
-  { hmiCode = "GENERIC_ERROR" },
-  { hmiCode = "USER_DISALLOWED" }
-}
-
-commonSendLocation.unexpectedResultCodes = {
-  "WARNINGS",
-  "RETRY",
-  "UNSUPPORTED_REQUEST",
-  "IN_USE" ,
-  "DATA_NOT_AVAILABLE",
-  "TIMED_OUT",
-  "CHAR_LIMIT_EXCEEDED",
-  "INVALID_ID",
-  "DUPLICATE_NAME",
-  "WRONG_LANGUAGE",
-  "TRUNCATED_DATA",
-  "READ_ONLY"
+local nonDirectResultCodes = {
+  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_APPS_REGISTERED" },
+  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_DEVICES_CONNECTED" }
 }
 
 local function getAvailableParams()
@@ -165,11 +147,11 @@ local function ptu(self, id, pUpdateFunction)
                   { policyfile = policy_file_path .. "/" .. policy_file_name })
               end)
             mobileSession:ExpectResponse(corIdSystemRequest, { success = true, resultCode = "SUCCESS" })
+            :Do(function() os.remove(ptu_file_name) end)
           end)
         :Times(AtMost(1))
       end
     end)
-  -- os.remove(ptu_file_name)
 end
 
 function commonSendLocation.preconditions()
@@ -348,6 +330,119 @@ function commonSendLocation.unregisterApp(pAppId, self)
   local cid = mobSession:SendRPC("UnregisterAppInterface",{})
   EXPECT_HMINOTIFICATION("BasicCommunication.OnAppUnregistered", { appID = hmiAppId, unexpectedDisconnect = false })
   mobSession:ExpectResponse(cid, { success = true, resultCode = "SUCCESS"})
+end
+
+local function getMobileResultCodes()
+  local out = {}
+  for k in pairs(mobile_api_schema.enum["Result"]) do
+    table.insert(out, k)
+  end
+  return out
+end
+
+local function getExpectedResultCodes(pFunctionName)
+  return mobile_api_schema.type["response"].functions[pFunctionName].param.resultCode.resultCodes
+end
+
+local function getHMIResultCodes()
+  local out = {}
+  for k in pairs(hmi_api_schema.enum["Result"]) do
+    table.insert(out, k)
+  end
+  return out
+end
+
+local function isContain(pTbl, pValue)
+  for _, v in pairs(pTbl) do
+    if v == pValue then return true end
+  end
+  return false
+end
+
+local function getKeysFromItemsTable(pTbl, pKey)
+  local out = {}
+  for _, item in pairs(pTbl) do
+    if not isContain(out, item[pKey]) then
+      table.insert(out, item[pKey])
+    end
+  end
+  return out
+end
+
+local function getResultCodesMap()
+  local out = {}
+  for _, v in pairs(getHMIResultCodes()) do
+    if isContain(getMobileResultCodes(), v) then
+      table.insert(out, { mobile = v, hmi = v })
+    elseif isContain(getKeysFromItemsTable(nonDirectResultCodes, "hmi"), v) then
+      for _, item in pairs(nonDirectResultCodes) do
+        if item.hmi == v then
+          table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+        end
+      end
+    else
+      table.insert(out, { mobile = nil, hmi = v })
+    end
+  end
+  return out
+end
+
+function commonSendLocation.getSuccessResultCodes(pFunctionName)
+  local out = {}
+  for _, item in pairs(getResultCodesMap()) do
+    if isContain(getExpectedResultCodes(pFunctionName), item.mobile) and isContain(successCodes, item.mobile) then
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+    end
+  end
+  return out
+end
+
+function commonSendLocation.getFailureResultCodes(pFunctionName)
+  local out = {}
+  for _, item in pairs(getResultCodesMap()) do
+    if isContain(getExpectedResultCodes(pFunctionName), item.mobile) and not isContain(successCodes, item.mobile) then
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+    end
+  end
+  return out
+end
+
+function commonSendLocation.getUnexpectedResultCodes(pFunctionName)
+  local out = {}
+  for _, item in pairs(getResultCodesMap()) do
+    if item.mobile ~= nil and not isContain(getExpectedResultCodes(pFunctionName), item.mobile) then
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+    end
+  end
+  return out
+end
+
+function commonSendLocation.getUnmappedResultCodes()
+  local out = {}
+  for _, item in pairs(getResultCodesMap()) do
+    if item.mobile == nil then
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+    end
+  end
+  return out
+end
+
+function commonSendLocation.printResultCodes(pResultCodes)
+  local function printItem(pItem)
+    for _, v in pairs(pItem) do
+      local msg = v.hmi
+      if v.mobile and v.mobile ~= v.hmi then msg = msg .. "\t" .. v.mobile end
+      print("", msg)
+    end
+  end
+  print("Success:")
+  printItem(pResultCodes.success)
+  print("Failure:")
+  printItem(pResultCodes.failure)
+  print("Unexpected:")
+  printItem(pResultCodes.unexpected)
+  print("Unmapped:")
+  printItem(pResultCodes.unmapped)
 end
 
 return commonSendLocation
