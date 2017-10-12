@@ -1,0 +1,16 @@
+./test_scripts/API/Navigation/SendLocation/001_SendLocation_success.lua
+./test_scripts/API/Navigation/SendLocation/002_SendLocation_transfer_result_code.lua
+./test_scripts/API/Navigation/SendLocation/003_SendLocation_without_address.lua
+./test_scripts/API/Navigation/SendLocation/004_SendLocation_wo_mandatory.lua
+./test_scripts/API/Navigation/SendLocation/005_SendLocation_wo_mandatory_with_deliveryMode.lua
+./test_scripts/API/Navigation/SendLocation/006_SendLocation_wo_deliveryMode.lua
+./test_scripts/API/Navigation/SendLocation/007_SendLocation_invalid_types.lua
+./test_scripts/API/Navigation/SendLocation/008_SendLocation_invalid_json.lua
+./test_scripts/API/Navigation/SendLocation/009_SendLocation_boundary.lua
+./test_scripts/API/Navigation/SendLocation/010_SendLocation_out_of_bound.lua
+./test_scripts/API/Navigation/SendLocation/011_SendLocation_whitespaces.lua
+./test_scripts/API/Navigation/SendLocation/012_SendLocation_cut_off_address.lua
+./test_scripts/API/Navigation/SendLocation/013_SendLocation_unsupported_resource.lua
+./test_scripts/API/Navigation/SendLocation/014_SendLocation_unsupported_capability.lua
+./test_scripts/API/Navigation/SendLocation/015_SendLocation_with_mandatory_params_and_disallowed_deliveryMode.lua
+./test_scripts/API/Navigation/SendLocation/016_SendLocation_with_mandatory_params_allowed_and_disallowed_locationName_deliveryMode.lua
