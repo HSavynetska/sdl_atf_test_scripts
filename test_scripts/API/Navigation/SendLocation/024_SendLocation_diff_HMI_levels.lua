@@ -38,7 +38,7 @@ local function sendLocationDisallowed(params, self)
     :Times(0)
 
     self.mobileSession2:ExpectResponse(cid, { success = false, resultCode = "DISALLOWED" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 local function sendLocationSuccess(params, self)
@@ -54,14 +54,15 @@ local function sendLocationSuccess(params, self)
 end
 
 local function BringAppToLimitedLevel(self)
+    local appIDval = commonSendLocation.getHMIAppId(1)
 	self.hmiConnection:SendNotification("BasicCommunication.OnAppDeactivated",
-		{ appID = self.applications["Test Application"] })
+		{ appID = appIDval })
 
 	self.mobileSession1:ExpectNotification("OnHMIStatus", { hmiLevel = "LIMITED" })
 end
 
 local function BringAppToBackgroundLevel(self)
-	commonSendLocation.activateApp("2", self)
+	commonSendLocation.activateApp(2, self)
 
 	self.mobileSession1:ExpectNotification("OnHMIStatus",{ hmiLevel = "BACKGROUND" })
 end
@@ -71,7 +72,7 @@ runner.Title("Preconditions")
 runner.Step("Clean environment", commonSendLocation.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.start)
 runner.Step("RAI, PTU first app", commonSendLocation.registerApplicationWithPTU)
-runner.Step("RAI, PTU second app", commonSendLocation.registerApplicationWithPTU, { "2" })
+runner.Step("RAI, PTU second app", commonSendLocation.registerApplicationWithPTU, { 2 })
 runner.Step("Activate first App", commonSendLocation.activateApp)
 
 runner.Title("Test")

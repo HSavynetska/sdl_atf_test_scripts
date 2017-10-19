@@ -11,7 +11,7 @@
 -- phoneNumber, locationImage, timeStamp, address, deliveryMode parameters.
 --
 -- Steps:
--- mobile app requests SendLocation with with out of bounds values
+-- mobile app requests SendLocation with out of bounds values
 --
 -- Expected:
 -- SDL responds INVALID_DATA, success:false
@@ -80,7 +80,7 @@ local function sendLocation(parameter, paramValue, self)
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "INVALID_DATA" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 local function sendLocationAddressLines(paramValue, self)
@@ -93,7 +93,7 @@ local function sendLocationAddressLines(paramValue, self)
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "INVALID_DATA" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 local function sendLocationTimeStamp(innerParam, paramValue, self)
@@ -107,7 +107,7 @@ local function sendLocationTimeStamp(innerParam, paramValue, self)
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "INVALID_DATA" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 local function sendLocationAddress(innerParam, paramValue, self)
@@ -121,7 +121,7 @@ local function sendLocationAddress(innerParam, paramValue, self)
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "INVALID_DATA" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 --[[ Scenario ]]
@@ -189,4 +189,3 @@ runner.Step("SendLocation_deliveryMode_out_bound", sendLocation,
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", commonSendLocation.postconditions)
-

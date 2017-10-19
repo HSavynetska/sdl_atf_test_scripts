@@ -38,7 +38,7 @@ local function sendLocationDisallowed(params, self)
     :Times(0)
 
     self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "DISALLOWED" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 --[[ Scenario ]]

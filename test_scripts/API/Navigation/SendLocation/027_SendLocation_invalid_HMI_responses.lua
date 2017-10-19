@@ -56,7 +56,8 @@ local function sendLocation(paramsResponse, idValue, self)
         local text
         if type(paramsResponse) ~= "string" then
             text = json.encode(paramsResponse)
-        else text = paramsResponse
+        else
+            text = paramsResponse
         end
         self.hmiConnection:Send(text)
     end)

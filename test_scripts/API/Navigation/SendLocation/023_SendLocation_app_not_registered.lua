@@ -33,7 +33,7 @@ local function sendLocation(self)
     :Times(0)
 
     self.mobileSession2:ExpectResponse(cid, { success = false, resultCode = "APPLICATION_NOT_REGISTERED" })
-    commonSendLocation.delayedExp(1000)
+    commonSendLocation.delayedExp()
 end
 
 local function CreationNewSession(self)
