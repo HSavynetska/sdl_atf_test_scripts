@@ -27,7 +27,7 @@ local string500char = string.rep("a", 500)
 local string200char = string.rep("a", 200)
 local string50char = string.rep("a", 50)
 local string16char = string.rep("a", 16)
-local minLen = ""
+local minLen = "a"
 local wayPointTypeDefault = "ALL"
 local imageTypes = { "DYNAMIC", "STATIC" }
 local LocationDetailsStringParams = {
@@ -104,7 +104,7 @@ runner.Step("GetWayPoints_wayPoints_lower_bound_longitudeDegrees" , GetWayPoints
     { "coordinate", { latitudeDegrees = 0.1, longitudeDegrees = coordinateParams.longitudeDegrees.lower }})
 for _, value in pairs(imageTypes) do
   runner.Step("GetWayPoints_wayPoints_lower_bound_locationImage_value_" .. value , GetWayPoints,
-    { "locationImage", { value = "", imageType = value }})
+    { "locationImage", { value = "a", imageType = value }})
 end
 
 runner.Title("Upper bound")
