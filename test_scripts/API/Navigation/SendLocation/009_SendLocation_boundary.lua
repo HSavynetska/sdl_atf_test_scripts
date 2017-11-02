@@ -27,6 +27,7 @@ local runner = require('user_modules/script_runner')
 local commonSendLocation = require('test_scripts/API/Navigation/commonSendLocation')
 
 --[[ Local Variables ]]
+local maxFileName = string.rep("a", 238)  .. ".png" -- 255 reduced to 242 due to docker limitation
 local lowerBoundRequest = {
     longitudeDegrees = -180.0,
     latitudeDegrees = -90.0,
@@ -99,7 +100,7 @@ local upperBoundRequest = {
     deliveryMode = "PROMPT",
     locationImage =
     {
-        value = string.rep("a", 251)  .. ".png",
+        value = maxFileName,
         imageType = "DYNAMIC",
     }
 }
@@ -138,7 +139,7 @@ runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
 runner.Step("Upload file with lower bound name", commonSendLocation.putFile, {"a"})
-runner.Step("Upload file with upper bound name", commonSendLocation.putFile, {string.rep("a", 251)  .. ".png"})
+runner.Step("Upload file with upper bound name", commonSendLocation.putFile, {maxFileName})
 
 runner.Title("Test")
 runner.Step("SendLocation-lower-bound-of-all-params", sendLocation, {lowerBoundRequest})
