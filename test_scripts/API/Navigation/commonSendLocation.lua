@@ -14,12 +14,10 @@ local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
 
-local mobile_api_loader = require("modules/api_loader")
-local mobile_api = mobile_api_loader.init("data/MOBILE_API.xml")
-local mobile_api_schema = mobile_api.interface["Ford Sync RAPI"]
-
-local hmi_api_loader = require("modules/api_loader")
-local hmi_api = hmi_api_loader.init("data/HMI_API.xml")
+local api_loader = require("modules/api_loader")
+local mobile_api = api_loader.init("data/MOBILE_API.xml")
+local mobile_api_schema = mobile_api.interface[next(mobile_api.interface)]
+local hmi_api = api_loader.init("data/HMI_API.xml")
 local hmi_api_schema = hmi_api.interface["Common"]
 
 --[[ Local Variables ]]

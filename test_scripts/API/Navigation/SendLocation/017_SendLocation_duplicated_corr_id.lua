@@ -33,29 +33,41 @@ local requestParams = {
 --[[ Local Functions ]]
 local function sendLocation(params, self)
   local cid = self.mobileSession1:SendRPC("SendLocation", params)
-
-  local msg = {
-    serviceType      = 7,
-    frameInfo        = 0,
-    rpcType          = 0,
-    rpcFunctionId    = 39,
-    rpcCorrelationId = cid,
-    payload          = '{"longitudeDegrees":1.1, "latitudeDegrees":1.1}'
-  }
+  print("MOB->SDL: RQ1" )
 
   params.appID = commonSendLocation.getHMIAppId()
 
   EXPECT_HMICALL("Navigation.SendLocation", params)
   :Do(function(exp,data)
-      if exp.occurences == 1 then
-          self.mobileSession1:Send(msg)
+      print("SDL->HMI: RQ" .. exp.occurences)
+      local function request2()
+        print("MOB->SDL: RQ2")
+        local msg = {
+          serviceType      = 7,
+          frameInfo        = 0,
+          rpcType          = 0,
+          rpcFunctionId    = 39,
+          rpcCorrelationId = cid,
+          payload          = '{"longitudeDegrees":1.1, "latitudeDegrees":1.1}'
+        }
+        self.mobileSession1:Send(msg)
       end
-      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+      if exp.occurences == 1 then
+        RUN_AFTER(request2, 500)
+      end
+      local function response()
+        print("HMI->SDL: RS" .. exp.occurences)
+        self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+      end
+      RUN_AFTER(response, 100)
   end)
   :Times(2)
 
   self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
   :Times(2)
+  :Do(function(exp)
+      print("SDL->MOB: RS" .. exp.occurences)
+    end)
 end
 
 --[[ Scenario ]]

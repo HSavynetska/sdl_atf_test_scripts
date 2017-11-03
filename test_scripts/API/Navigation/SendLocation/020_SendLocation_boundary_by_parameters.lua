@@ -31,6 +31,8 @@ local string500Char = string.rep("a", 500)
 local string255Char = string.rep("a", 255)
 local string200Char = string.rep("a", 200)
 
+local maxFileName = string.rep("a", 238)  .. ".png" -- 255 reduced to 242 due to docker limitation
+
 local request_params = {
     longitudeDegrees = 1.1,
     latitudeDegrees = 1.1
@@ -82,7 +84,7 @@ local boundValues ={
     addressLines = {lower = {"a"}, upper = {string500Char}}
 }
 
-local locationImage = {lower = "a", upper = string255Char}
+local locationImage = {lower = "a", upper = maxFileName}
 
 local deliveryModeEnum = {
     "PROMPT",
@@ -212,7 +214,7 @@ runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSendLocation.
 runner.Step("RAI, PTU", commonSendLocation.registerApplicationWithPTU)
 runner.Step("Activate App", commonSendLocation.activateApp)
 runner.Step("Upload file", commonSendLocation.putFile, {"a"})
-runner.Step("Upload file", commonSendLocation.putFile, {string255Char})
+runner.Step("Upload file", commonSendLocation.putFile, {maxFileName})
 
 --[[ Test ]]
 --[[ Lower bound set]]
