@@ -27,28 +27,42 @@ local function GetWayPoints(self)
 		wayPointType = "ALL"
 	}
   local cid = self.mobileSession1:SendRPC("GetWayPoints", params)
-  local msg = {
-    serviceType      = 7,
-    frameInfo        = 0,
-    rpcType          = 0,
-    rpcFunctionId    = 45,
-    rpcCorrelationId = cid,
-    payload          = '{"wayPointType":"ALL"}'
-  }
+  print("MOB->SDL: RQ1")
+
   params.appID = common.getHMIAppId()
   local lResponse = { }
   lResponse.wayPoints = {{ locationName = "Hotel" }}
   lResponse.appID = common.getHMIAppId()
   EXPECT_HMICALL("Navigation.GetWayPoints", params)
   :Do(function(exp,data)
-      if exp.occurences == 1 then
-          self.mobileSession1:Send(msg)
+      print("SDL->HMI: RQ" .. exp.occurences)
+      local function request2()
+        print("MOB->SDL: RQ2")
+        local msg = {
+          serviceType      = 7,
+          frameInfo        = 0,
+          rpcType          = 0,
+          rpcFunctionId    = 45,
+          rpcCorrelationId = cid,
+          payload          = '{"wayPointType":"ALL"}'
+        }
+        self.mobileSession1:Send(msg)
       end
-      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", lResponse)
+      if exp.occurences == 1 then
+        RUN_AFTER(request2, 500)
+      end
+      local function response()
+        print("HMI->SDL: RS" .. exp.occurences)
+        self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", lResponse)
+      end
+      RUN_AFTER(response, 100)
   end)
   :Times(2)
   self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS", wayPoints = lResponse.wayPoints })
   :Times(2)
+  :Do(function(exp)
+      print("SDL->MOB: RS" .. exp.occurences)
+    end)
 end
 
 --[[ Scenario ]]
