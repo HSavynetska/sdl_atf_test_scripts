@@ -12,7 +12,7 @@
 -- SDL receives allowed SendLocation request and parameters section is omitted in PT
 --
 -- Expected:
--- SDL responds DISALLOWED, success:false
+-- SDL proceed with this request
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')

@@ -40,11 +40,21 @@ local function sendLocation(params, self)
     params.appID = commonSendLocation.getHMIAppId()
     EXPECT_HMICALL("Navigation.SendLocation", params)
     :Do(function(_,data)
-        self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
-        self.hmiConnection:SendError(data.id, data.method, "ABORTED", "Error message")
-        self.hmiConnection:SendError(data.id, data.method, "REJECTED", "Error message")
+        local function response1()
+            self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+        end
+        local function response2()
+            self.hmiConnection:SendError(data.id, data.method, "ABORTED", "Error message")
+        end
+        local function response3()
+            self.hmiConnection:SendError(data.id, data.method, "REJECTED", "Error message")
+        end
+        RUN_AFTER(response1, 300)
+        RUN_AFTER(response2, 600)
+        RUN_AFTER(response3, 900)
     end)
     self.mobileSession1:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
+    commonSendLocation.delayedExp()
 end
 
 --[[ Scenario ]]

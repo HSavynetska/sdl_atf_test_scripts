@@ -60,7 +60,11 @@ local function sendLocation(params, self)
     EXPECT_HMICALL("Navigation.SendLocation")
     :Times(0)
     commonSendLocation.delayedExp()
-    self.mobileSession1:ExpectResponse(cid, { success = false, resultCode = "DISALLOWED" })
+    self.mobileSession1:ExpectResponse(cid, { 
+          success = false, 
+          resultCode = "DISALLOWED",
+          info = "Requested parameters are disallowed by Policies" 
+        })
 end
 
 --[[ Scenario ]]
