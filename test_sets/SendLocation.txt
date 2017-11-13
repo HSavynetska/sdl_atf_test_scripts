@@ -22,3 +22,11 @@
 ./test_scripts/API/Navigation/SendLocation/022_SendLocation_fake_another_request_params.lua
 ./test_scripts/API/Navigation/SendLocation/023_SendLocation_app_not_registered.lua
 ./test_scripts/API/Navigation/SendLocation/024_SendLocation_diff_HMI_levels.lua
+./test_scripts/API/Navigation/SendLocation/025_SendLocation_disallowed_by_policies.lua
+./test_scripts/API/Navigation/SendLocation/026_SendLocation_invalid_HMI_responses.lua
+./test_scripts/API/Navigation/SendLocation/027_SendLocation_parameters_omitted_in_policy_table.lua
+./test_scripts/API/Navigation/SendLocation/028_SendLocation_parameters_empty_in_policy_table.lua
+./test_scripts/API/Navigation/SendLocation/029_SendLocation_requested_parameters_disallowed.lua
+./test_scripts/API/Navigation/SendLocation/030_SendLocation_invalid_characters.lua
+./test_scripts/API/Navigation/SendLocation/031_SendLocation_several_responses_to_request.lua
+
