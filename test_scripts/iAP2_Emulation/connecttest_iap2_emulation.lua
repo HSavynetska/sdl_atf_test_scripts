@@ -4,8 +4,25 @@ local SDL = require("SDL")
 local policyTable = require("user_modules/shared_testcases/testCasesForPolicyTable")
 local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local expectations = require("expectations")
+local mobile = require("mobile_connection")
+local mobile_session = require("mobile_session")
+local tcp = require("tcp_connection")
+local file_connection = require("file_connection")
 
 local Expectation = expectations.Expectation
+
+--[[ IN ORDER TO USE IAP2 EMULATION IN SDL IT MUST BE BUILT ON WITH BUILD_TESTS = ON ]]
+iAP2_BT_DeviceID = "127.0.0.1"
+iAP2_BT_Port = 23456
+iAP2_BT_out = "iap2bt.out"
+iAP2_BT_Type = "BLUETOOTH"
+
+-- Device IDs must be the same in order to trigger switching logic
+iAP2_USB_DeviceID = iAP2_BT_DeviceID
+iAP2_USB_Port = 34567
+iAP2_USB_out = "iap2usb.out"
+iAP2_USB_Type = "USB_IOS"
+
 
 -- =========================================================================
 -- =========================================================================
@@ -63,6 +80,19 @@ function module:startSession(session)
     )
 end
 
+function module:waitForAllEvents(milliseconds)
+    local event = events.Event()
+    event.matches = function(self, e)
+        return self == e
+    end
+    EXPECT_HMIEVENT(event, "Delayed event"):Timeout(milliseconds + 1000)
+    local function toRun()
+        event_dispatcher:RaiseEvent(self.hmiConnection, event)
+    end
+    RUN_AFTER(toRun, milliseconds)
+end
+
+
 -- =========================================================================
 -- =========================================================================
 -- ========================= GLOBAL DEFINITIONS ============================
@@ -101,11 +131,31 @@ function EXPECT_EVENT(event, name, device)
     return ret
 end
 
+function RAISE_EVENT(event, data, eventName, device)
+    event_str = "noname"
+    if eventName then
+        event_str = eventName
+    end
+    xmlReporter.AddMessage(debug.getinfo(1, "n").name, event_str)
+    event_dispatcher:RaiseEvent(device, data)
+end
+
 function StopSDLAndRestorePT()
     policyTable:Restore_preloaded_pt()
     event_dispatcher:ClearEvents()
     Test.expectations_list:Clear()
     return SDL:StopSDL()
+end
+
+
+function createIAP2Device(deviceID, devicePort, deviceOut)
+    local iap2Connection = tcp.Connection(deviceID, devicePort)
+    local fileConnection = file_connection.FileConnection(deviceOut, iap2Connection)
+    local iap2Device = mobile.MobileConnection(fileConnection)
+
+    event_dispatcher:AddConnection(iap2Device)
+
+    return iap2Device
 end
 
 return module

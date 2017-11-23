@@ -41,49 +41,19 @@ local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 
-local mobile = require("mobile_connection")
 local mobile_session = require("mobile_session")
 
-local tcp = require("tcp_connection")
-local file_connection = require("file_connection")
-
 --[[ General Settings for configuration ]]
-Test = require("user_modules/connecttest_iap2_emulation")
+Test = require("test_scripts/iAP2_Emulation/connecttest_iap2_emulation")
 require("cardinalities")
 require("user_modules/AppTypes")
 
 -- [[Local variables]]
 local app_RAI_params = config["application1"].registerAppInterfaceParams
+app_RAI_params.appHMIType = {"MEDIA"}
 local light_cyan_color = 36
 local put_file_name = "file.json"
 local icon_file_name = "icon.png"
-
---[[ 
-IN ORDER TO USE IAP2 EMULATION IN SDL IT MUST BE BUILT ON 
-https://github.com/dev-gh/sdl_core/tree/experimental/IAP_adapters_emulation
-WITH 
-BUILD_TESTS = ON
-]]
-local iAP2_BT_DeviceID = "127.0.0.1"
-local iAP2_BT_Port = 23456
-local iAP2_BT_out = "iap2bt.out"
-local iAP2_BT_Type = "BLUETOOTH"
-
--- Device IDs must be the same in order to trigger switching logic
-local iAP2_USB_DeviceID = iAP2_BT_DeviceID
-local iAP2_USB_Port = 34567
-local iAP2_USB_out = "iap2usb.out"
-local iAP2_USB_Type = "USB_IOS"
-
-local function createIAP2Device(deviceID, devicePort, deviceOut)
-    local iap2Connection = tcp.Connection(deviceID, devicePort)
-    local fileConnection = file_connection.FileConnection(deviceOut, iap2Connection)
-    local iap2Device = mobile.MobileConnection(fileConnection)
-
-    event_dispatcher:AddConnection(iap2Device)
-
-    return iap2Device
-end
 
 local function isFileExisting(file_name)
     -- Device id produced for iAP2 Bluetooth by SDL = hashed device id
@@ -146,18 +116,6 @@ Test["Connecting iAP2 Bluetooth"] =
             )
         end
     )
-end
-
-Test["Adding way points subsription"] =
-    function(self)
-    local correlation_id = iap2bt_mobileSession:SendRPC("SubscribeWayPoints", {})
-    EXPECT_HMICALL("Navigation.SubscribeWayPoints"):Do(
-        function(_, data)
-            self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
-        end
-    )
-    EXPECT_RESPONSE(correlation_id, iap2bt_mobileSession, {success = true, resultCode = "SUCCESS"})
-    EXPECT_NOTIFICATION("OnHashChange", iap2bt_mobileSession)
 end
 
 Test["Adding command"] =
@@ -334,6 +292,18 @@ Test["Adding vehicle info subsription"] =
     EXPECT_RESPONSE(correlation_id, iap2bt_mobileSession, {success = true, resultCode = "SUCCESS"})
 end
 
+Test["disabled - Adding way points subsription"] =
+    function(self)
+    local correlation_id = iap2bt_mobileSession:SendRPC("SubscribeWayPoints", {})
+    EXPECT_HMICALL("Navigation.SubscribeWayPoints"):Do(
+        function(_, data)
+            self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+        end
+    )
+    EXPECT_RESPONSE(correlation_id, iap2bt_mobileSession, {success = true, resultCode = "SUCCESS"})
+    EXPECT_NOTIFICATION("OnHashChange", iap2bt_mobileSession)
+end
+
 Test["Adding regular file"] = function(self)
     AddFileForApplication(iap2bt_mobileSession, put_file_name, "JSON")
 end
@@ -395,13 +365,6 @@ Test["Connecting iAP2 USB"] =
             app_RAI_params.hashID = "some_wrong_hash_id"
             local correlation_id = iap2usb_mobileSession:SendRPC("RegisterAppInterface", app_RAI_params)
             iap2usb_mobileSession:ExpectResponse(correlation_id, {success = true, resultCode = "RESUME_FAILED"})
-        end
-    )
-
-    EXPECT_HMICALL("Navigation.UnsubscribeWayPoints"):Do(
-        function(_, data)
-            commonFunctions:userPrint(light_cyan_color, "Unsubscribed from waypoints")
-            self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
         end
     )
 
@@ -490,6 +453,16 @@ Test["Connecting iAP2 USB"] =
             )
         end
     )
+
+    -- Temporary disabled
+    -- EXPECT_HMICALL("Navigation.UnsubscribeWayPoints"):Do(
+    --     function(_, data)
+    --         commonFunctions:userPrint(light_cyan_color, "Unsubscribed from waypoints")
+    --         self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
+    --     end
+    -- )
+
+    Test:waitForAllEvents(3000)
 end
 
 Test["Verifying choice/command expectations"] = function(self)

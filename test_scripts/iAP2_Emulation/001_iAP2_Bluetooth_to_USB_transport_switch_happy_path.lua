@@ -36,46 +36,16 @@ local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 
-local mobile = require("mobile_connection")
 local mobile_session = require("mobile_session")
 
-local tcp = require("tcp_connection")
-local file_connection = require("file_connection")
-
 --[[ General Settings for configuration ]]
-Test = require("user_modules/connecttest_iap2_emulation")
+Test = require("test_scripts/iAP2_Emulation/connecttest_iap2_emulation")
 require("cardinalities")
 require("user_modules/AppTypes")
 
 -- [[Local variables]]
 local app_RAI_params = config["application1"].registerAppInterfaceParams
 
---[[ 
-IN ORDER TO USE IAP2 EMULATION IN SDL IT MUST BE BUILT ON 
-https://github.com/dev-gh/sdl_core/tree/experimental/IAP_adapters_emulation
-WITH 
-BUILD_TESTS = ON
-]]
-local iAP2_BT_DeviceID = "127.0.0.1"
-local iAP2_BT_Port = 23456
-local iAP2_BT_out = "iap2bt.out"
-local iAP2_BT_Type = "BLUETOOTH"
-
--- Device IDs must be the same in order to trigger switching logic
-local iAP2_USB_DeviceID = iAP2_BT_DeviceID
-local iAP2_USB_Port = 34567
-local iAP2_USB_out = "iap2usb.out"
-local iAP2_USB_Type = "USB_IOS"
-
-local function createIAP2Device(deviceID, devicePort, deviceOut)
-    local iap2Connection = tcp.Connection(deviceID, devicePort)
-    local fileConnection = file_connection.FileConnection(deviceOut, iap2Connection)
-    local iap2Device = mobile.MobileConnection(fileConnection)
-
-    event_dispatcher:AddConnection(iap2Device)
-
-    return iap2Device
-end
 
 --[[ Preconditions ]]
 commonFunctions:newTestCasesGroup("Preconditions")
@@ -86,8 +56,6 @@ commonSteps:DeleteLogsFiles()
 commonFunctions:newTestCasesGroup("Test")
 
 local iap2bt_device = 0
-local hmi_app_id = 0
-local iap2usb_mobileSession = 0
 
 Test["Connecting iAP2 Bluetooth"] =
     function(self)
@@ -110,11 +78,6 @@ Test["Connecting iAP2 Bluetooth"] =
     local iap2bt_mobileSession = mobile_session.MobileSession(self, iap2bt_device, app_RAI_params)
 
     Test:startSession(iap2bt_mobileSession)
-    EXPECT_HMINOTIFICATION("BasicCommunication.OnAppRegistered"):Do(
-        function(_, data)
-            hmi_app_id = data.params.application.appID
-        end
-    )
 end
 
 Test["Connecting iAP2 USB"] =
@@ -145,24 +108,8 @@ Test["Connecting iAP2 USB"] =
 
     Test:connectMobile(iap2usb_device)
 
-    iap2usb_mobileSession = mobile_session.MobileSession(self, iap2usb_device, app_RAI_params)
-end
+    local iap2usb_mobileSession = mobile_session.MobileSession(self, iap2usb_device, app_RAI_params)
 
-local hmi_request_id = 0
-Test["Sending request from HMI, command hold expected"] = function(self)
-    hmi_request_id = self.hmiConnection:SendRequest("SDL.ActivateApp", {appID = hmi_app_id})
-
-    EXPECT_HMIRESPONSE(hmi_request_id):Times(0)
-end
-
-Test["Sending notification from HMI, command hold expected"] = function(self)
-    self.hmiConnection:SendNotification("UI.OnDriverDistraction", {state = "DD_OFF"})
-
-    EXPECT_NOTIFICATION("OnDriverDistraction", iap2usb_mobileSession):Times(0)
-end
-
-Test["Register app, response is sent to HMI"] =
-    function(self)
     local rpc_service_id = 7
     iap2usb_mobileSession:StartService(rpc_service_id):Do(
         function()
@@ -170,9 +117,7 @@ Test["Register app, response is sent to HMI"] =
             iap2usb_mobileSession:ExpectResponse(correlationId, {success = true, resultCode = "SUCCESS"})
         end
     )
-
-    EXPECT_NOTIFICATION("OnDriverDistraction", iap2usb_mobileSession)
-    EXPECT_HMIRESPONSE(hmi_request_id, {result = {code = 0, method = "SDL.ActivateApp"}})
+    Test:waitForAllEvents(2000)
 end
 
 -- [[ Postconditions ]]
