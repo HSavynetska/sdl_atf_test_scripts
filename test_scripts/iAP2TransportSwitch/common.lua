@@ -40,16 +40,13 @@ m.device = {
 m.appParams = config["application1"].registerAppInterfaceParams
 
 function module:start()
-  local pHMIParams = hmi_values.getDefaultHMITable()
-  pHMIParams.BasicCommunication.UpdateDeviceList.mandatory = true
-  pHMIParams.BasicCommunication.UpdateDeviceList.pinned = false
   self:runSDL()
   commonFunctions:waitForSDLStart(self)
   :Do(function()
       self:initHMI(self)
       :Do(function()
           commonFunctions:userPrint(35, "HMI initialized")
-          self:initHMI_onReady(pHMIParams)
+          self:initHMI_onReady()
           :Do(function()
               commonFunctions:userPrint(35, "HMI is ready")
             end)
