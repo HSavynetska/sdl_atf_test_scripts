@@ -22,6 +22,7 @@
 ./test_scripts/API/Navigation/GetWayPoints/022_GetWayPoints_invalid_characters.lua
 ./test_scripts/API/Navigation/GetWayPoints/023_GetWayPoints_app_not_registered.lua
 ./test_scripts/API/Navigation/GetWayPoints/024_GetWayPoints_invalid_types_in_HMIresponse.lua
+./test_scripts/API/Navigation/GetWayPoints/025_GetWayPoints_Transfering_of_HMI_resultCode_to_mobile.lua
 ./test_scripts/API/Navigation/OnWayPointChange/001_OnWayPointChange_success_flow.lua
 ./test_scripts/API/Navigation/OnWayPointChange/002_OnWayPointChange_not_allowed_by_policy.lua
 ./test_scripts/API/Navigation/OnWayPointChange/003_OnWayPointChange_invalid_notification.lua
@@ -54,6 +55,7 @@
 ./test_scripts/API/Navigation/SubscribeWayPoints/011_SubscribeWayPoints_fake_another_request_params.lua
 ./test_scripts/API/Navigation/SubscribeWayPoints/012_SubscribeWayPoints_APP_NOT_REGISTERED.lua
 ./test_scripts/API/Navigation/SubscribeWayPoints/013_SubscribeWayPoints_diff_HMI_levels.lua
+./test_scripts/API/Navigation/SubscribeWayPoints/014_SubscribeWayPoints_Transfering_of_HMI_error_resultCode_to_mobile.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/001_UnsubscribeWayPoints_success_flow.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/002_UnsubscribeWayPoints_DISALLOWED_by_policy.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/003_UnsubscribeWayPoints_IGNORED_already_unsubscribed_app.lua
@@ -65,5 +67,6 @@
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/009_UnsubscribeWayPoints_unexpected_disconnect.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/010_UnsubscribeWayPoints_2_apps.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/011_UnsubscribeWayPoints_diff_HMI_levels.lua
-./test_scripts/API/Navigation/UnsubscribeWayPoints/012_UnsubscribeWayPoints_app_not_registered.lua	
+./test_scripts/API/Navigation/UnsubscribeWayPoints/012_UnsubscribeWayPoints_app_not_registered.lua
 ./test_scripts/API/Navigation/UnsubscribeWayPoints/013_UnsubscribeWayPoints_fake_another_request_parameters.lua
+./test_scripts/API/Navigation/UnsubscribeWayPoints/014_UnsubscribeWayPoints_Transfering_of_HMI_error_resultCode_to_mobile.lua

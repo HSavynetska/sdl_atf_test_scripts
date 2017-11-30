@@ -28,6 +28,7 @@ commonNavigation.minTimeout = 500
 commonNavigation.appId1 = 1
 commonNavigation.appId2 = 2
 
+
 --[[ Variables ]]
 local ptu_table = {}
 local hmiAppIds = {}
@@ -40,9 +41,8 @@ local successCodes = {
   "SAVED"
 }
 
-local nonDirectResultCodes = {
-  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_APPS_REGISTERED" },
-  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_DEVICES_CONNECTED" }
+local excludedCodes = {
+  "UNSUPPORTED_RESOURCE" -- excluded due to unresolved clarification
 }
 
 local notification = {
@@ -559,16 +559,12 @@ end
 local function getResultCodesMap()
   local out = {}
   for _, v in pairs(getHMIResultCodes()) do
-    if isContain(getMobileResultCodes(), v) then
-      table.insert(out, { mobile = v, hmi = v })
-    elseif isContain(commonNavigation.getKeysFromItemsTable(nonDirectResultCodes, "hmi"), v) then
-      for _, item in pairs(nonDirectResultCodes) do
-        if item.hmi == v then
-          table.insert(out, { mobile = item.mobile, hmi = item.hmi })
-        end
+    if not isContain(excludedCodes, v) then
+      if isContain(getMobileResultCodes(), v) then
+        table.insert(out, { mobile = v, hmi = v })
+      else
+        table.insert(out, { mobile = nil, hmi = v })
       end
-    else
-      table.insert(out, { mobile = nil, hmi = v })
     end
   end
   return out
@@ -612,8 +608,10 @@ end
 function commonNavigation.getUnexpectedResultCodes(pFunctionName)
   local out = {}
   for _, item in pairs(getResultCodesMap()) do
+   local success = false
+    if isContain(successCodes, item.mobile) then success = true end
     if item.mobile ~= nil and not isContain(getExpectedResultCodes(pFunctionName), item.mobile) then
-      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi, success = success })
     end
   end
   return out
@@ -651,6 +649,8 @@ function commonNavigation.printResultCodes(pResultCodes)
   printItem(pResultCodes.failure)
   print("Unexpected:")
   printItem(pResultCodes.unexpected)
+  print("Unmapped:")
+  printItem(pResultCodes.unmapped)
 end
 
 --[[ @DelayedExp: delay test step for default timeout
