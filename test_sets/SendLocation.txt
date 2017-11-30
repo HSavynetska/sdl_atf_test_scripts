@@ -28,3 +28,4 @@
 ./test_scripts/API/Navigation/SendLocation/028_SendLocation_requested_parameters_disallowed.lua
 ./test_scripts/API/Navigation/SendLocation/029_SendLocation_invalid_characters.lua
 ./test_scripts/API/Navigation/SendLocation/030_SendLocation_several_responses_to_request.lua
+./test_scripts/API/Navigation/SendLocation/031_SendLocation_transfer_result_code.lua

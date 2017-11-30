@@ -37,9 +37,8 @@ local successCodes = {
   "SAVED"
 }
 
-local nonDirectResultCodes = {
-  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_APPS_REGISTERED" },
-  { mobile = "APPLICATION_NOT_REGISTERED", hmi = "NO_DEVICES_CONNECTED" }
+local excludedCodes = {
+  "UNSUPPORTED_RESOURCE" -- excluded due to unresolved clarification
 }
 
 local function getAvailableParams()
@@ -370,16 +369,12 @@ end
 local function getResultCodesMap()
   local out = {}
   for _, v in pairs(getHMIResultCodes()) do
-    if isContain(getMobileResultCodes(), v) then
-      table.insert(out, { mobile = v, hmi = v })
-    elseif isContain(commonSendLocation.getKeysFromItemsTable(nonDirectResultCodes, "hmi"), v) then
-      for _, item in pairs(nonDirectResultCodes) do
-        if item.hmi == v then
-          table.insert(out, { mobile = item.mobile, hmi = item.hmi })
-        end
+    if not isContain(excludedCodes, v) then
+      if isContain(getMobileResultCodes(), v) then
+        table.insert(out, { mobile = v, hmi = v })
+      else
+        table.insert(out, { mobile = nil, hmi = v })
       end
-    else
-      table.insert(out, { mobile = nil, hmi = v })
     end
   end
   return out
@@ -408,8 +403,10 @@ end
 function commonSendLocation.getUnexpectedResultCodes(pFunctionName)
   local out = {}
   for _, item in pairs(getResultCodesMap()) do
+    local success = false
+    if isContain(successCodes, item.mobile) then success = true end
     if item.mobile ~= nil and not isContain(getExpectedResultCodes(pFunctionName), item.mobile) then
-      table.insert(out, { mobile = item.mobile, hmi = item.hmi })
+      table.insert(out, { mobile = item.mobile, hmi = item.hmi, success = success })
     end
   end
   return out
@@ -439,6 +436,8 @@ function commonSendLocation.printResultCodes(pResultCodes)
   printItem(pResultCodes.failure)
   print("Unexpected:")
   printItem(pResultCodes.unexpected)
+  print("Unmapped:")
+  printItem(pResultCodes.unmapped)
 end
 
 --[[ @filterTable: remove from 1st table items provided in 2nd table
