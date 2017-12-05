@@ -35,6 +35,7 @@ local mobSession = require("mobile_session")
 
 --[[ Local Variables ]]
 local deviceBluetooth
+local deviceBluetoothName = common.device.bluetooth.id..":"..common.device.bluetooth.port
 
 --[[ Local Functions ]]
 local function connectBluetoothDevice(self)
@@ -45,7 +46,7 @@ local function connectBluetoothDevice(self)
     deviceList = {
       {
         id = config.deviceMAC,
-        name = common.device.bluetooth.id,
+        name = deviceBluetoothName,
         transportType = common.device.bluetooth.type
       }
     }
@@ -73,24 +74,42 @@ local function connectUSBDevice(self)
   EXPECT_HMINOTIFICATION("BasicCommunication.OnAppRegistered"):Times(0)
   EXPECT_HMICALL("BasicCommunication.UpdateAppList"):Times(0)
 
+  local is_switching_done = false
+
   EXPECT_HMICALL("BasicCommunication.UpdateDeviceList", {
     deviceList = {
       {
         id = config.deviceMAC,
-        name = common.device.bluetooth.id,
-        transportType = common.device.bluetooth.type
+        name = common.device.usb.uid,
+        transportType = common.device.usb.type
       },
       {
         id = config.deviceMAC,
-        name = common.device.usb.id,
+        name = common.device.bluetooth.uid,
+        transportType = common.device.bluetooth.type
+      }      
+    }
+  }, 
+  {
+    deviceList = {
+      {
+        id = config.deviceMAC,
+        name = common.device.usb.uid,
         transportType = common.device.usb.type
-      }
+      }      
     }
   })
   :Do(function(_, data)
-      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })
-      deviceBluetooth:Close()
+      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })   
+
+      if not is_switching_done then
+        self:doTransportSwitch(deviceBluetooth)
+        is_switching_done = true
+      end
+
+      return true
     end)
+  :Times(2)
 
   self:connectMobile(deviceUsb)
   :Do(function()

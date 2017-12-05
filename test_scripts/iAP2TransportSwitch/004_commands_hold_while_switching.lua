@@ -39,6 +39,7 @@ local sessionBluetooth
 local sessionUsb
 local hmiAppId
 local hmiRequestId
+local lastHashID
 
 --[[ Local Functions ]]
 local function connectBluetoothDevice(self)
@@ -49,7 +50,7 @@ local function connectBluetoothDevice(self)
     deviceList = {
       {
         id = config.deviceMAC,
-        name = common.device.bluetooth.id,
+        name = common.device.bluetooth.uid,
         transportType = common.device.bluetooth.type
       }
     }
@@ -73,6 +74,21 @@ local function connectBluetoothDevice(self)
     end)
 end
 
+
+local function addVehicleInfoSubscription(self)
+  local cid = sessionBluetooth:SendRPC("SubscribeVehicleData", { odometer = true })
+  EXPECT_HMICALL("VehicleInfo.SubscribeVehicleData")
+  :Do(function(_, data)
+      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })
+    end)
+  sessionBluetooth:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
+  sessionBluetooth:ExpectNotification("OnHashChange")
+  :Do(function(_, data)
+    lastHashID = data.payload.hashID
+    print("Last hash "..lastHashID)
+  end)
+end
+
 local function connectUSBDevice(self)
   local deviceUsb = self:createIAP2Device(common.device.usb.id,
     common.device.usb.port, common.device.usb.out)
@@ -81,24 +97,42 @@ local function connectUSBDevice(self)
   EXPECT_HMINOTIFICATION("BasicCommunication.OnAppRegistered"):Times(0)
   EXPECT_HMICALL("BasicCommunication.UpdateAppList"):Times(0)
 
+  local is_switching_done = false
+  
   EXPECT_HMICALL("BasicCommunication.UpdateDeviceList", {
     deviceList = {
       {
         id = config.deviceMAC,
-        name = common.device.bluetooth.id,
-        transportType = common.device.bluetooth.type
+        name = common.device.usb.uid,
+        transportType = common.device.usb.type
       },
       {
         id = config.deviceMAC,
-        name = common.device.usb.id,
+        name = common.device.bluetooth.uid,
+        transportType = common.device.bluetooth.type
+      }      
+    }
+  }, 
+  {
+    deviceList = {
+      {
+        id = config.deviceMAC,
+        name = common.device.usb.uid,
         transportType = common.device.usb.type
-      }
+      }      
     }
   })
   :Do(function(_, data)
-      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })
-      deviceBluetooth:Close()
+      self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })   
+
+      if not is_switching_done then
+        self:doTransportSwitch(deviceBluetooth)
+        is_switching_done = true
+      end
+
+      return true
     end)
+  :Times(2)
 
   self:connectMobile(deviceUsb)
   :Do(function()
@@ -124,6 +158,7 @@ local function sendResponseToHMI(self)
   local rpc_service_id = 7
   sessionUsb:StartService(rpc_service_id)
   :Do(function()
+      common.appParams.hashID = lastHashID
       local correlationId = sessionUsb:SendRPC("RegisterAppInterface", common.appParams)
       sessionUsb:ExpectResponse(correlationId, { success = true, resultCode = "SUCCESS" })
     end)
@@ -139,6 +174,7 @@ runner.Step("Start SDL, HMI", common.start)
 
 runner.Title("Test")
 runner.Step("Connect Bluetooth Device", connectBluetoothDevice)
+runner.Step("Add VehicleInfoSubscription", addVehicleInfoSubscription)
 runner.Step("Connect USB Device", connectUSBDevice)
 runner.Step("Sending request from HMI, command hold expected", sendRequestFromHMI)
 runner.Step("Sending notification from HMI, command hold expected", sendNotificationFromHMI)
