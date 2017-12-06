@@ -95,7 +95,7 @@ end
 function module:doTransportSwitch(device)
   local input = io.open(config.pathToSDL.."/iap_signals_in", "w")
   if not input then print("Input signals channel not opened") return end
-  input_signal = "SDL_TRANSPORT_SWITCH"
+  local input_signal = "SDL_TRANSPORT_SWITCH"
   input:write(input_signal)
   print("Signal "..input_signal.." sent")
   input:close()       
@@ -103,7 +103,7 @@ function module:doTransportSwitch(device)
   local output = io.open(config.pathToSDL.."/iap_signals_out", "r")
   if not output then print("Output signals channel not opened") return end
   print("Waiting for ACK")
-  out = output:read()
+  local out = output:read()
   print("Got signal: "..out)
   if out ~= "SDL_TRANSPORT_SWITCH_ACK" then print("Unexpected signal") return end
   output:close()
