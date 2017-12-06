@@ -14,7 +14,6 @@ local file_connection = require("file_connection")
 local mobile = require("mobile_connection")
 local events = require("events")
 local expectations = require('expectations')
-local hmi_values = require('user_modules/hmi_values')
 local module = require("user_modules/dummy_connecttest")
 
 --[[ Local Variables ]]
@@ -94,14 +93,14 @@ function module:connectMobile(pDevice)
 end
 
 function module:doTransportSwitch(device)
-  input = io.open(config.pathToSDL.."/iap_signals_in", "w")
+  local input = io.open(config.pathToSDL.."/iap_signals_in", "w")
   if not input then print("Input signals channel not opened") return end
   input_signal = "SDL_TRANSPORT_SWITCH"
   input:write(input_signal)
   print("Signal "..input_signal.." sent")
   input:close()       
   
-  output = io.open(config.pathToSDL.."/iap_signals_out", "r")
+  local output = io.open(config.pathToSDL.."/iap_signals_out", "r")
   if not output then print("Output signals channel not opened") return end
   print("Waiting for ACK")
   out = output:read()
