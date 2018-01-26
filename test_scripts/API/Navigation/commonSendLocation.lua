@@ -2,7 +2,7 @@
 -- SendLocation common module
 ---------------------------------------------------------------------------------------------------
 --[[ General configuration parameters ]]
-config.deviceMAC = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"
+config.mobileHost = "127.0.0.1"
 config.defaultProtocolVersion = 2
 
 --[[ Required Shared libraries ]]
@@ -50,8 +50,14 @@ local function getAvailableParams()
 end
 
 local function allowSDL(self)
-  self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality",
-    { allowed = true, source = "GUI", device = { id = config.deviceMAC, name = "127.0.0.1" } })
+  self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality", {
+    allowed = true,
+    source = "GUI",
+    device = {
+      id = commonSendLocation.getDeviceMAC(),
+      name = commonSendLocation.getDeviceName()
+    }
+  })
 end
 
 local function checkIfPTSIsSentAsBinary(bin_data)
@@ -181,8 +187,16 @@ function commonSendLocation.delayedExp(timeout)
   commonTestCases:DelayedExp(timeout)
 end
 
+function commonSendLocation.getDeviceName()
+  return config.mobileHost .. ":" .. config.mobilePort
+end
+
 function commonSendLocation.getDeviceMAC()
-  return config.deviceMAC
+  local cmd = "echo -n " .. commonSendLocation.getDeviceName() .. " | sha256sum | awk '{printf $1}'"
+  local handle = io.popen(cmd)
+  local result = handle:read("*a")
+  handle:close()
+  return result
 end
 
 function commonSendLocation.getSelfAndParams(...)
