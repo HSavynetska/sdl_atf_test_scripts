@@ -2,7 +2,7 @@
 -- Navigation common module
 ---------------------------------------------------------------------------------------------------
 --[[ General configuration parameters ]]
-config.deviceMAC = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"
+config.mobileHost = "127.0.0.1"
 config.defaultProtocolVersion = 2
 
 --[[ Required Shared libraries ]]
@@ -370,8 +370,14 @@ end
 --! self - test object
 --]]
 local function allowSDL(self)
-  self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality",
-    { allowed = true, source = "GUI", device = { id = config.deviceMAC, name = "127.0.0.1" } })
+  self.hmiConnection:SendNotification("SDL.OnAllowSDLFunctionality", {
+    allowed = true,
+    source = "GUI",
+    device = {
+      id = commonNavigation.getDeviceMAC(),
+      name = commonNavigation.getDeviceName()
+    }
+  })
 end
 
 --[[ @start: starting sequence: starting of SDL, initialization of HMI, connect mobile
@@ -658,6 +664,24 @@ end
 --]]
 function commonNavigation.DelayedExp()
   commonTestCases:DelayedExp(commonNavigation.timeout)
+end
+
+--[[ @getDeviceName: return device name
+--! @parameters: none
+--]]
+function commonNavigation.getDeviceName()
+  return config.mobileHost .. ":" .. config.mobilePort
+end
+
+--[[ @getDeviceMAC: return device MAC address
+--! @parameters: none
+--]]
+function commonNavigation.getDeviceMAC()
+  local cmd = "echo -n " .. commonNavigation.getDeviceName() .. " | sha256sum | awk '{printf $1}'"
+  local handle = io.popen(cmd)
+  local result = handle:read("*a")
+  handle:close()
+  return result
 end
 
 --[[ @protect: make table immutable
