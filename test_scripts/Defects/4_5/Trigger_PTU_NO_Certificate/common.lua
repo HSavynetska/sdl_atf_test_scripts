@@ -400,6 +400,7 @@ function m.policyTableUpdate(pPTUpdateFunc, pExpNotificationFunc, pAppId)
   if not pAppId then pAppId = 1 end
   if not pExpNotificationFunc then
     test.hmiConnection:ExpectNotification("SDL.OnStatusUpdate", { status = "UP_TO_DATE" })
+    test.hmiConnection:ExpectRequest("VehicleInfo.GetVehicleData", { odometer = true })
   else
     pExpNotificationFunc()
   end
