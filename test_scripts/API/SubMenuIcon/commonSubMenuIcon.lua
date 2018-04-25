@@ -6,12 +6,7 @@
 config.defaultProtocolVersion = 2
 
 --[[ Required Shared libraries ]]
-local mobileSession = require("mobile_session")
-local json = require("modules/json")
 local actions = require("user_modules/sequences/actions")
-local utils = require("user_modules/utils")
-local test = require("user_modules/dummy_connecttest")
-local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
 
 --[[ Module ]]
 local m = actions
@@ -29,6 +24,12 @@ local function getPutFileAllParams()
     offset = 0,
     length = 11600
   }
+end
+
+function m.getPathToFileInStorage(pFileName)
+  return commonPreconditions:GetPathToSDL() .. "storage/"
+  .. config["application1"].registerAppInterfaceParams.appID .. "_"
+  .. utils.getDeviceMAC() .. "/" .. pFileName
 end
 
 --[[ @putFile: Successful processing PutFile RPC
@@ -56,6 +57,12 @@ function m.putFile(pParamsSend, pFile, pAppId)
   mobSession:ExpectResponse(cid, { success = true, resultCode = "SUCCESS" })
 end 
 
+--[[ @AddSubMenu: Successful processing AddSubMenu RPC
+--! @parameters:
+--! params - Parameters for AddSubMenu RPC
+--! pAppId - Application number (1, 2, etc.)
+--! @return: none
+--]]
 function m.AddSubMenu(params, pAppId)
   if not pAppId then pAppId = 1 end
   local mobSession = m.getMobileSession(pAppId)

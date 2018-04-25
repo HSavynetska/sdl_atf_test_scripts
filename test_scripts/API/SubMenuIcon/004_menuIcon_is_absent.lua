@@ -8,9 +8,10 @@
 --
 -- Description:
 -- In case:
--- 1) 
+-- 1) Mobile application sends AddSubMenu request to SDL without menuIcon parameter.
 -- SDL does:
--- 1) 
+-- 1) Forward  UI.AddSubMenu request params to HMI.
+-- 2) Respond with (resultCode: SUCCESS, success:true) to mobile application.
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
@@ -43,12 +44,11 @@ local allParams = {
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
-runner.Step("App registration", common.registerAppWOPTU, { 1 })
-runner.Step("Activate Application", common.activateApp, { 1 })
-runner.Step("Upload icon file", common.putFile)
+runner.Step("App registration", common.registerAppWOPTU)
+runner.Step("Activate Application", common.activateApp)
 
 runner.Title("Test")
-runner.Step("AddSubMenu ", common.AddSubMenu, {allParams, 1 })
+runner.Step(" AddSubMenu request without menuIcon ", common.AddSubMenu, {allParams})
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions)
