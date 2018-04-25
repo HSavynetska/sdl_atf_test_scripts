@@ -20,7 +20,6 @@ local common = require('test_scripts/API/SubMenuIcon/commonSubMenuIcon')
 runner.testSettings.isSelfIncluded = false
 
 --[[ Local Variables ]]
-
 local requestParams = {
 	menuID = 1000,
 	position = 500,
