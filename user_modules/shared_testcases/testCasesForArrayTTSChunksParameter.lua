@@ -23,7 +23,7 @@ local TTSChunkParameter = require('user_modules/shared_testcases/testCasesForTTS
 	--7. IsOutUpperBound
 	--8. Check parameters in side TTSChunk:
 		--text: minlength="0" maxlength="500" type="String"
-		--type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE", "FILE"
+		--type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE"
 
 	
 	
@@ -79,7 +79,7 @@ function testCasesForArrayTTSChunksParameter:verify_TTSChunks_Parameter(Request,
 		
 		--7. Verify TTSChunk
 		--text: minlength="0" maxlength="500" type="String"
-		--type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE", "FILE"
+		--type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE"
 		
 		--Set default parameters for request
 		TestingRequest = commonFunctions:cloneTable(RequestParametersValues)

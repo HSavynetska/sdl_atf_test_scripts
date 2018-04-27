@@ -4,9 +4,15 @@
   --2. commonFunctions:createString(500) --example
 ---------------------------------------------------------------------------------------------
 local commonFunctions = {}
+local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
+require('atf.util')
 local json = require('json4lua/json/json')
+local expectations = require('expectations')
+local events = require('events')
 
+require('modules/config')
 local NewTestSuiteNumber = 0 -- use as subfix of test case "NewTestSuite" to make different test case name.
+local path_config = commonPreconditions:GetPathToSDL()
 ---------------------------------------------------------------------------------------------
 ------------------------------------------ Functions ----------------------------------------
 ---------------------------------------------------------------------------------------------
@@ -38,6 +44,7 @@ local NewTestSuiteNumber = 0 -- use as subfix of test case "NewTestSuite" to mak
 --24. Function start PTU sequence HTTP flow
 --25. Function reads log file and find specific string in this file.
 --26. Function updates json file with new section
+--27. Function joins paths of file system
 ---------------------------------------------------------------------------------------------
 
 --return true if app is media or navigation
@@ -51,12 +58,78 @@ function commonFunctions:isMediaApp()
   end
 
   return isMedia
-
 end
 
-function commonFunctions:userPrint( color, message, delimeter)
-  delimeter = delimeter or "\n"
-  io.write("\27[" .. tostring(color) .. "m" .. tostring(message) .. "\27[0m", delimeter)
+--check that SDL ports are open then raise else RUN after timeout configured by step variable
+function commonFunctions:waitForSDLStart(test)
+  local step = 100
+  local hmiPort = config.hmiPort
+  local event = events.Event()
+  event.matches = function(self, e) return self == e end
+  local function raise_event()
+    assert(hmiPort ~= nil or hmiPort ~= "")
+    local output = os.execute ("netstat -vatn  | grep " .. hmiPort .. " | grep LISTEN")
+    if (output) then
+      RAISE_EVENT(event, event)
+    else
+      RUN_AFTER(raise_event, step)
+    end
+  end
+  RUN_AFTER(raise_event, step)
+  local ret = expectations.Expectation("Wait for SDL start", test.mobileConnection)
+  ret.event = event
+  event_dispatcher:AddEvent(test.mobileConnection, ret.event, ret)
+  test:AddExpectation(ret)
+  return ret
+end
+
+function commonFunctions:createMultipleExpectationsWaiter(test, name)
+  local expectations = require('expectations')
+  local Expectation = expectations.Expectation
+  assert(test and name)
+  exp_waiter = {}
+  exp_waiter.expectation_list = {}
+  function exp_waiter:CheckStatus()
+     if #exp_waiter.expectation_list == 0 and not exp_waiter.expectation.status then
+      exp_waiter.expectation.status = SUCCESS
+      event_dispatcher:RaiseEvent(test.mobileConnection, exp_waiter.event)
+      return true
+     end
+     return false
+  end
+
+  function exp_waiter:AddExpectation(exp)
+    table.insert(exp_waiter.expectation_list, exp)
+    exp:Do(function()
+      exp_waiter:RemoveExpectation(exp)
+      exp_waiter:CheckStatus()
+    end)
+  end
+
+  function exp_waiter:RemoveExpectation(exp)
+    local function AnIndexOf(t,val)
+      for k,v in ipairs(t) do
+        if v == val then return k end
+      end
+      return nil
+    end
+
+    table.remove(exp_waiter.expectation_list,
+                 AnIndexOf(exp_waiter.expectation_list, exp))
+  end
+
+  exp_waiter.event = events.Event()
+
+  exp_waiter.event.matches = function(self, e)
+    return self == e
+  end
+
+  exp_waiter.expectation = Expectation(name, test.mobileConnection)
+  exp_waiter.expectation.event = exp_waiter.event
+  exp_waiter.event.level = 3
+  event_dispatcher:AddEvent(test.mobileConnection, exp_waiter.event , exp_waiter.expectation)
+  test:AddExpectation(exp_waiter.expectation)
+  return exp_waiter
 end
 
 --1. Functions for String
@@ -94,6 +167,28 @@ function commonFunctions:createArrayInteger(size, value)
   end
   return temp
 
+end
+
+function commonFunctions:createArrayEnum(size, value)
+
+  local temp = {}
+  for i = 1, size do
+    table.insert(temp, value)
+  end
+  return temp
+
+end
+
+function commonFunctions:buildColoredString(color, message)
+  if config.color then
+    return "\27[" .. tostring(color) .. "m" .. tostring(message) .. "\27[0m"
+  end
+  return message
+end
+
+function commonFunctions:userPrint( color, message, delimeter)
+  delimeter = delimeter or "\n"
+  io.write(commonFunctions:buildColoredString(color, message), delimeter)
 end
 ---------------------------------------------------------------------------------------------
 
@@ -404,7 +499,6 @@ function commonFunctions:verify_Unsuccess_Case(self, Request, ResultCode)
 
   --mobile side: expect the response
   EXPECT_RESPONSE(cid, { success = false, resultCode = ResultCode })
-  :Timeout(50)
 
   messageflag = true
 end
@@ -711,7 +805,7 @@ end
 ---------------------------------------------------------------------------------------------
 -- !!! Do not update fucntion without necessity. In case of updating check all scripts where function is used.
 function commonFunctions:SetValuesInIniFile(FindExpression, parameterName, ValueToUpdate )
-  local SDLini = config.pathToSDL .. "smartDeviceLink.ini"
+  local SDLini = path_config .. "smartDeviceLink.ini"
 
   f = assert(io.open(SDLini, "r"))
     if f then
@@ -778,7 +872,7 @@ end
 --14. Functions for SDL stop
 ---------------------------------------------------------------------------------------------
 function commonFunctions:SDLForceStop(self)
-  os.execute("ps aux | grep smart | awk \'{print $2}\' | xargs kill -9")
+  os.execute("ps aux | grep ./smartDeviceLinkCore | awk '{print $2}' | xargs kill -9")
   commonFunctions:sleep(1)
 end
 
@@ -794,7 +888,7 @@ end
 --15. Function gets parameter from smartDeviceLink.ini file
 ---------------------------------------------------------------------------------------------
 function commonFunctions:read_parameter_from_smart_device_link_ini(param_name)
-  local path_to_ini_file = concatenation_path(config.pathToSDL, "smartDeviceLink.ini")
+  local path_to_ini_file = concatenation_path(path_config, "smartDeviceLink.ini")
   assert(commonFunctions:File_exists(path_to_ini_file))
   local param_value  = nil
   for line in io.lines(path_to_ini_file) do
@@ -818,7 +912,7 @@ end
 --16. Function sets parameter to smartDeviceLink.ini file
 ---------------------------------------------------------------------------------------------
 function commonFunctions:write_parameter_to_smart_device_link_ini(param_name, param_value)
-  local path_to_ini_file = concatenation_path(config.pathToSDL, "smartDeviceLink.ini")
+  local path_to_ini_file = concatenation_path(path_config, "smartDeviceLink.ini")
   assert(commonFunctions:File_exists(path_to_ini_file))
   local new_file_content = ""
   local is_find_string = false
@@ -991,14 +1085,11 @@ function commonFunctions:check_ptu_sequence_partly(self, ptu_path, ptu_name)
   EXPECT_HMICALL("BasicCommunication.SystemRequest"):Times(0)
   EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate")
   :ValidIf(function(exp,data)
-    if
-      (exp.occurences == 1 or exp.occurences == 2) and
+    if (exp.occurences == 1 or exp.occurences == 2) and
       data.params.status == "UP_TO_DATE" then
         return true
     end
-    if
-      exp.occurences == 1 and
-      data.params.status == "UPDATING" then
+    if exp.occurences == 1 and data.params.status == "UPDATING" then
         return true
     end
     return false
@@ -1149,7 +1240,7 @@ end
 --! @brief Triggers PTU HTTP flow sequence by odometer
 --! @param self contains Test
 function commonFunctions:trigger_ptu_by_odometer(self)
-  local path_to_policy_db = concatenation_path(config.pathToSDL, "storage/policy.sqlite")
+  local path_to_policy_db = concatenation_path(path_config, "storage/policy.sqlite")
   local exchange_after_x_kilometers = commonFunctions:get_data_policy_sql(path_to_policy_db,
     "SELECT exchange_after_x_kilometers FROM module_config")
   local pt_exchange_at_odometer_x = commonFunctions:get_data_policy_sql(path_to_policy_db,
@@ -1228,5 +1319,33 @@ function commonFunctions:update_json_file(path_to_json, old_section, new_section
   file:write(dataToWrite)
   file:close()
 end
+
+-- ---------------------------------------------------------------------------------------------
+--27. Function joins paths of file system
+-- ---------------------------------------------------------------------------------------------
+--! @brief Return the path resulting from combining the individual paths
+--! @args ... file paths
+--! @usage Function usage example: commonFunctions:pathJoin("/tmp", "fs/mp/images/ivsu_cache", "ptu.json") returns "/tmp/fs/mp/images/ivsu_cache/ptu.json"
+function commonFunctions:pathJoin(...)
+  local args = {...}
+  args[#args]  = string.sub(args[#args], -1) == "/" and string.sub(args[#args], 1, -2) or args[#args]
+  return table.concat(args, "/")
+end
+
+function commonFunctions.getURLs(pService)
+  local utils = require ('user_modules/utils')
+  local function getPathToSDL()
+    local pathToSDL = config.pathToSDL
+    if pathToSDL:sub(-1) ~= '/' then
+      pathToSDL = pathToSDL .. "/"
+    end
+    return pathToSDL
+  end
+  local fileName = getPathToSDL() .. commonFunctions:read_parameter_from_smart_device_link_ini("PreloadedPT")
+  local tbl = utils.jsonFileToTable(fileName)
+  local url = tbl.policy_table.module_config.endpoints[pService].default
+  return url
+end
+
 
 return commonFunctions

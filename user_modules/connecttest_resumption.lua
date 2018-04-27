@@ -196,7 +196,7 @@ function RUN_AFTER(func, timeout, funcName)
   if funcName then
     func_name_str = funcName
   end
-  xmlReporter.AddMessage(debug.getinfo(1, "n").name, func_name_str, 
+  xmlReporter.AddMessage(debug.getinfo(1, "n").name, func_name_str,
     {["functionLine"] = debug.getinfo(func, "S").linedefined, ["Timeout"] = tostring(timeout)})
   local d = qt.dynamic()
   d.timeout = function(self)
@@ -308,7 +308,6 @@ function module:runSDL()
   end
   local result, errmsg = SDL:StartSDL(config.pathToSDL, config.SDL, config.ExitOnCrash)
   if not result then
-    SDL:DeleteFile()
     quit(1)
   end
   SDL.autoStarted = true
@@ -364,7 +363,7 @@ end
 function module:initHMI_onReady()
   local function ExpectRequest(name, mandatory, params)
     local event = events.Event()
-    event.level = 2
+    event.level = 1
     event.matches = function(self, data) return data.method == name end
     return
     EXPECT_HMIEVENT(event, name)
@@ -383,7 +382,7 @@ function module:initHMI_onReady()
   local function ExpectNotification(name, mandatory)
     xmlReporter.AddMessage(debug.getinfo(1, "n").name, tostring(name))
     local event = events.Event()
-    event.level = 2
+    event.level = 1
     event.matches = function(self, data) return data.method == name end
     return
     EXPECT_HMIEVENT(event, name)

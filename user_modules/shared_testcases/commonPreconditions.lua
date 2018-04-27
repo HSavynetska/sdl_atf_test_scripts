@@ -4,12 +4,53 @@ local Preconditions = {}
 --------------------------------------------------------------------------------------------------------
 -- Precondition function is added needed fields.
 
+local pattern_exit_codes =
+{
+	"1",
+	"exit_codes%.aborted"
+}
+
+local function update_connecttest(fileContent, FileName)
+	local is_found = false
+	for i = 1, #pattern_exit_codes do
+		local patternDisconnect = "print%(\"Disconnected%!%!%!\"%).-quit%("..pattern_exit_codes[i].."%)"
+
+		local DisconnectMessage = fileContent:match(patternDisconnect)
+
+		if( DisconnectMessage ~= nil )then
+			fileContent = string.gsub(fileContent, patternDisconnect, 'print("Disconnected!!!")')
+			is_found = true
+			break
+		end
+	end
+
+	if(is_found == false) then
+		print(" \27[31m 'Disconnected!!!' message is not found in /user_modules/" .. tostring(FileName) .. " \27[0m ")
+	end
+
+	return fileContent
+end
+
+function Preconditions:getAbsolutePath(relativePath)
+  if type(relativePath) == "string" and relativePath ~= ""  and not relativePath:find(" ") then
+    local commandToExecute = "readlink -fm " .. relativePath
+    local db = assert(io.popen(commandToExecute, 'r'))
+    local data = assert(db:read('*a'))
+    db:close()
+    return string.gsub(data, "\n", "")
+  else
+    return ""
+  end
+end
+
 function Preconditions:GetPathToSDL()
 	local pathToSDL = config.pathToSDL
   if pathToSDL:sub(-1) ~= '/' then
     pathToSDL = pathToSDL .. "/"
   end
   return pathToSDL
+  --Uncomment when Preconditions:getAbsolutePath issue is fixed
+  -- return Preconditions:getAbsolutePath(config.pathToSDL) .. "/"
 end
 
 function Preconditions:SendLocationPreconditionUpdateHMICap()
@@ -114,6 +155,12 @@ function Preconditions:RestoreFile(FileName)
   os.execute( " rm -f " .. Preconditions:GetPathToSDL() .. FileName .. "_origin" )
 end
 
+
+-- replace origin of file with new one
+function Preconditions:ReplaceFile(originalFile, newFile)
+  os.execute(" cp " .. newFile .. " " .. Preconditions:GetPathToSDL() .. originalFile)
+end
+
 --------------------------------------------------------------------------------------------------------
 -- Updating user connect test: removing from start app registration and remove closing script after SDL disconnect
 function Preconditions:Connecttest_without_ExitBySDLDisconnect_WithoutOpenConnectionRegisterApp(FileName)
@@ -121,13 +168,13 @@ function Preconditions:Connecttest_without_ExitBySDLDisconnect_WithoutOpenConnec
 	os.execute(  'cp ./modules/connecttest.lua  ./user_modules/'  .. tostring(FileName))
 
 	-- remove connectMobile, startSession call, quit(1) after SDL disconnect
-	f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
+	local f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
 
-	fileContent = f:read("*all")
+	local fileContent = f:read("*all")
 	f:close()
 
-	local pattertConnectMobileCall = "function .?module%:ConnectMobile.-connectMobile.-end"
-	local patternStartSessionCall = "function .?module%:StartSession.-startSession.-end"
+	local pattertConnectMobileCall = "function .?Test%:ConnectMobile.-connectMobile.-end"
+	local patternStartSessionCall = "function .?Test%:StartSession.-startSession.-end"
 	local connectMobileCall = fileContent:match(pattertConnectMobileCall)
 	local startSessionCall = fileContent:match(patternStartSessionCall)
 
@@ -143,13 +190,7 @@ function Preconditions:Connecttest_without_ExitBySDLDisconnect_WithoutOpenConnec
 		fileContent  =  string.gsub(fileContent, patternStartSessionCall, "")
 	end
 
-	local patternDisconnect = "print%(\"Disconnected%!%!%!\"%).-quit%(1%)"
-	local DisconnectMessage = fileContent:match(patternDisconnect)
-	if DisconnectMessage == nil then
-		print(" \27[31m 'Disconnected!!!' message is not found in /user_modules/" .. tostring(FileName) .. " \27[0m ")
-	else
-		fileContent  =  string.gsub(fileContent, patternDisconnect, 'print("Disconnected!!!")')
-	end
+	fileContent = update_connecttest(fileContent, FileName)
 
 	f = assert(io.open('./user_modules/' .. tostring(FileName), "w+"))
 	f:write(fileContent)
@@ -163,12 +204,12 @@ function Preconditions:Connecttest_without_ExitBySDLDisconnect_OpenConnection(Fi
 	os.execute(  'cp ./modules/connecttest.lua  ./user_modules/'  .. tostring(FileName))
 
 	-- remove startSession call, quit(1) after SDL disconnect
-	f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
+	local f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
 
-	fileContent = f:read("*all")
+	local fileContent = f:read("*all")
 	f:close()
 
-	local patternStartSessionCall = "function .?module%:StartSession.-startSession.-end"
+	local patternStartSessionCall = "function .?Test%:StartSession.-startSession.-end"
 	local startSessionCall = fileContent:match(patternStartSessionCall)
 
 	if startSessionCall == nil then
@@ -177,13 +218,7 @@ function Preconditions:Connecttest_without_ExitBySDLDisconnect_OpenConnection(Fi
 		fileContent  =  string.gsub(fileContent, patternStartSessionCall, "")
 	end
 
-	local patternDisconnect = "print%(\"Disconnected%!%!%!\"%).-quit%(1%)"
-	local DisconnectMessage = fileContent:match(patternDisconnect)
-	if DisconnectMessage == nil then
-		print(" \27[31m 'Disconnected!!!' message is not found in /user_modules/" .. tostring(FileName) .. " \27[0m ")
-	else
-		fileContent  =  string.gsub(fileContent, patternDisconnect, 'print("Disconnected!!!")')
-	end
+	fileContent = update_connecttest(fileContent, FileName)
 
 	f = assert(io.open('./user_modules/' .. tostring(FileName), "w+"))
 	f:write(fileContent)
@@ -197,18 +232,12 @@ function Preconditions:Connecttest_without_ExitBySDLDisconnect(FileName)
 	os.execute(  'cp ./modules/connecttest.lua  ./user_modules/'  .. tostring(FileName))
 
 	-- remove quit(1) after SDL disconnect
-	f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
+	local f = assert(io.open('./user_modules/'  .. tostring(FileName), "r"))
 
-	fileContent = f:read("*all")
+	local fileContent = f:read("*all")
 	f:close()
 
-	local patternDisconnect = "print%(\"Disconnected%!%!%!\"%).-quit%(1%)"
-	local DisconnectMessage = fileContent:match(patternDisconnect)
-	if DisconnectMessage == nil then
-		print(" \27[31m 'Disconnected!!!' message is not found in /user_modules/" .. tostring(FileName) .. " \27[0m ")
-	else
-		fileContent  =  string.gsub(fileContent, patternDisconnect, 'print("Disconnected!!!")')
-	end
+	fileContent = update_connecttest(fileContent, FileName)
 
 	f = assert(io.open('./user_modules/' .. tostring(FileName), "w+"))
 	f:write(fileContent)
@@ -432,7 +461,7 @@ function Preconditions:Connecttest_InitHMI_onReady_call(FileName, createFile)
 	fileContent = f:read("*all")
 	f:close()
 
-  	local pattern1 = "function .?module%:InitHMI_onReady.-initHMI_onReady.-end"
+  	local pattern1 = "function .?Test%:InitHMI_onReady.-initHMI_onReady.-end"
   	local pattern1Result = fileContent:match(pattern1)
 
   	if pattern1Result == nil then

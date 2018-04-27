@@ -21,7 +21,7 @@ local enumerationParameter = require('user_modules/shared_testcases/testCasesFor
 	--2. IsEmpty
 	--3. IsWrongDataType
 	--4. text: minlength="0" maxlength="500" type="String"
-	--5. type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE", "FILE"
+	--5. type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE"
 
 	
 function testCasesForTTSChunkParameter:verify_TTSChunk_Parameter(Request, Parameter, Mandatory)
@@ -54,8 +54,8 @@ function testCasesForTTSChunkParameter:verify_TTSChunk_Parameter(Request, Parame
 
 		stringParameter:verify_String_Parameter(Request, parameter_text, Boundary, true)
 		
-		--5. type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE", "FILE"
-		local ExistentValues = {"TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE", "FILE"}
+		--5. type: type="SpeechCapabilities": "TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE"
+		local ExistentValues = {"TEXT", "SAPI_PHONEMES", "LHPLUS_PHONEMES", "PRE_RECORDED", "SILENCE"}
 		local parameter_type = commonFunctions:BuildChildParameter(Parameter, "type")
 		
 		enumerationParameter:verify_Enum_String_Parameter(Request, parameter_type, ExistentValues, true)			
