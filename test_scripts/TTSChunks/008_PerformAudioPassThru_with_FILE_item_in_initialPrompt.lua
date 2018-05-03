@@ -10,7 +10,7 @@
 -- In case:
 -- 1) HMI provides ‘FILE’ item in ‘speechCapabilities’ parameter of ‘TTS.GetCapabilities’ response 
 -- 2) New app registers and send PerformAudioPassThru with ‘FILE’ item in ‘initialPrompt’ parameter
--- SDL does:
+-- SDL does: 
 -- 1) Send TTS.Speak request to HMI with ‘FILE’ item in ‘ttsChunks’ parameter
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]

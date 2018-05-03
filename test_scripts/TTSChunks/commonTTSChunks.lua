@@ -18,7 +18,7 @@ local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 
 --[[ Module ]]
 local m = actions
-
+ 
 m.HMITypeStatus = {
   NAVIGATION = false,
   COMMUNICATION = false

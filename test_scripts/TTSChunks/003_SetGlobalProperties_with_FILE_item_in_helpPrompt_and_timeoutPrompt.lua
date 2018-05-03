@@ -44,7 +44,7 @@ local requestParams = {
 	keyboardProperties = {
 		keyboardLayout = "QWERTY",
 		keypressMode = "SINGLE_KEYPRESS",
-		limitedCharacterList = {"a"},
+		limitedCharacterList = {"a"}, 
 		language = "EN-US",
 		autoCompleteText = "Daemon, Freedom"
 	}

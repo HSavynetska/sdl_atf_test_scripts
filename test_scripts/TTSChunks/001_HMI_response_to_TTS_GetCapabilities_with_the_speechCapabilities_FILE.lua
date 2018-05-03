@@ -29,4 +29,4 @@ runner.Step("Start SDL, start HMI, HMI responds to the TTS.GetCapabilities with 
 runner.Step("SDL respond to mobile app with 'speechCapabilities':'FILE' parameter", common.registerApp)
 
 runner.Title("Postconditions")
-runner.Step("Stop SDL", common.postconditions)
+runner.Step("Stop SDL", common.postconditions) 

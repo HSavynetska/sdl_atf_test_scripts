@@ -35,7 +35,7 @@ local function changeRegistrationSuccess()
     vrSynonyms = {
       "VRSyncProxyTester",
     }
-  }
+  } 
   local mobSession = common.getMobileSession()
   local hmiConnection = common.getHMIConnection()
   local cid = mobSession:SendRPC("ChangeRegistration", requestParams)

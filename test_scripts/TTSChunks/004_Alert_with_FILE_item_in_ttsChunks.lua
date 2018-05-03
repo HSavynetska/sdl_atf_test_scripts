@@ -44,7 +44,7 @@ local responseUiParams = {
 			fieldName = requestParams.alertText2,
 			fieldText = requestParams.alertText2
 		},
-		{
+		{ 
 			fieldName = requestParams.alertText3,
 			fieldText = requestParams.alertText3
 		}

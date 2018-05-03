@@ -30,3 +30,4 @@ runner.Step("App registration with 'ttsName':'FILE', HMI receives BC.OnAppRegist
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions)
+ 

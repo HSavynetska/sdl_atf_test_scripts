@@ -5,7 +5,7 @@
 --
 -- Requirement summary:
 -- TBD
---
+-- 
 -- Description:
 -- In case:
 -- 1)  HMI provides ‘FILE’ item in ‘speechCapabilities’ parameter of ‘TTS.GetCapabilities’ response
