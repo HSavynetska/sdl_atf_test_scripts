@@ -25,8 +25,8 @@ runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 
 runner.Title("Test")
-runner.Step("Start SDL, start HMI, HMI responds to the TTS.GetCapabilities with 'speechCapabilities':'FILE', connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("SDL respond to mobile app with 'speechCapabilities':'FILE' parameter", common.registerApp)
+runner.Step("Start SDL, HMI(sends:TTS.GetCapabilities('speechCapabilities':'FILE'), connect Mobile, start Session", common.start, {common.hmi_value})
+runner.Step("App registered with speechCapabilities:FILE", common.registerAppWithTTS)
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions) 

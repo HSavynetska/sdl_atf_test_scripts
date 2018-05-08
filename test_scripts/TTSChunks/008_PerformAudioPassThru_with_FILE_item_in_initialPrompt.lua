@@ -125,7 +125,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 

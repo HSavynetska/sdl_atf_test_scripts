@@ -20,30 +20,46 @@ local common = require('test_scripts/TTSChunks/commonTTSChunks')
 --[[ Test Configuration ]]
 runner.testSettings.isSelfIncluded = false
 
-local function changeRegistrationSuccess()
-  local requestParams = {
-    language ="EN-US",
-    hmiDisplayLanguage ="EN-US",
-    appName ="SyncProxyTester",
-    ttsName = {
-      {
-        text ="SyncProxyTester",
-        type ="FILE",
-      },
+local requestParams = {
+  language ="EN-US",
+  hmiDisplayLanguage ="EN-US",
+  ttsName = {
+    {
+      text ="SyncProxyTester",
+      type ="FILE",
     },
-    ngnMediaScreenAppName ="SPT",
-    vrSynonyms = {
-      "VRSyncProxyTester",
-    }
-  } 
+  },
+} 
+
+local responseUiParams = {
+  hmiDisplayLanguage = requestParams.hmiDisplayLanguage
+}
+
+local responseVrParams = {
+  language = requestParams.language
+}
+
+local responseTtsParams = {
+  ttsChunks = requestParams.ttsChunks,
+  language = requestParams.language
+}
+
+local allParams = {
+  requestParams = requestParams,
+  responseUiParams = responseUiParams,
+  responseVrParams = responseVrParams,
+  responseTtsParams = responseTtsParams
+}
+
+local function changeRegistrationSuccess(params)
+  if not pAppId then pAppId = 1 end
   local mobSession = common.getMobileSession()
   local hmiConnection = common.getHMIConnection()
   local cid = mobSession:SendRPC("ChangeRegistration", requestParams)
 
+  params.responseUiParams.appID = common.getHMIAppId()
   EXPECT_HMICALL("UI.ChangeRegistration", {
-    appName = requestParams.appName,
     language = requestParams.hmiDisplayLanguage,
-    ngnMediaScreenAppName = requestParams.ngnMediaScreenAppName,
     appID = common.getHMIAppId()
   })
   :Do(function(_, data)
@@ -52,13 +68,13 @@ local function changeRegistrationSuccess()
 
   EXPECT_HMICALL("VR.ChangeRegistration", {
     language = requestParams.language,
-    vrSynonyms = requestParams.vrSynonyms,
     appID = common.getHMIAppId()
   })
   :Do(function(_, data)
       hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
     end)
 
+  params.responseTtsParams.appID = common.getHMIAppId()
   EXPECT_HMICALL("TTS.ChangeRegistration", {
     language = requestParams.language,
     ttsName = requestParams.ttsName,
@@ -75,12 +91,12 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 
 runner.Title("Test")
-runner.Step("ChangeRegistration Positive Case", changeRegistrationSuccess)
+runner.Step("ChangeRegistration Positive Case", changeRegistrationSuccess, { allParams })
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions)

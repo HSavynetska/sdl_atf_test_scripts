@@ -23,13 +23,13 @@ runner.testSettings.isSelfIncluded = false
 local requestParams = {
 	helpPrompt = {
 		{
-			text = "Help prompt",
+			text = "MP3_123kb.mp3",
 			type = "FILE"
 		}
 	},
 	timeoutPrompt =	{
 		{
-			text = "Timeout prompt",
+			text = "MP3_123kb.mp3",
 			type = "FILE"
 		}
 	},
@@ -40,20 +40,11 @@ local requestParams = {
 			text = "VR help item"
 		}
 	},
-	menuTitle = "Menu Title",
-	keyboardProperties = {
-		keyboardLayout = "QWERTY",
-		keypressMode = "SINGLE_KEYPRESS",
-		limitedCharacterList = {"a"}, 
-		language = "EN-US",
-		autoCompleteText = "Daemon, Freedom"
-	}
 }
 
 local responseUiParams = {
 	vrHelpTitle = requestParams.vrHelpTitle,
-	menuTitle = requestParams.menuTitle,
-	keyboardProperties = requestParams.keyboardProperties
+	vrHelp = requestParams.vrHelp
 }
 
 local responseTtsParams = {
@@ -63,6 +54,7 @@ local responseTtsParams = {
 
 local allParams = {
 	requestParams = requestParams,
+	responseUiParams = responseUiParams,
 	responseTtsParams = responseTtsParams
 }
 
@@ -71,7 +63,9 @@ local function setGlobalProperties(params)
 	local mobSession = common.getMobileSession()
 	local hmiConnection = common.getHMIConnection()
 	local cid = mobSession:SendRPC("SetGlobalProperties", params.requestParams)
+	print("qwqe")
 
+	params.responseUiParams.appID = common.getHMIAppId()
 	EXPECT_HMICALL("UI.SetGlobalProperties", params.responseUiParams)
 	:Do(function(_,data)
 		hmiConnection:SendResponse(data.id, data.method, "SUCCESS", {})
@@ -91,7 +85,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 

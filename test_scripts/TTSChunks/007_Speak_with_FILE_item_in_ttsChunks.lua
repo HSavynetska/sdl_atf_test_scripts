@@ -21,35 +21,43 @@ local common = require('test_scripts/TTSChunks/commonTTSChunks')
 runner.testSettings.isSelfIncluded = false
 
 --[[ Local Functions ]]
-local function getRequestParams()
-	return {
-		ttsChunks = {
-			{
-				text ="Speak",
-				type ="FILE"
-			}
-		},
-	}
-end
+local requestParams = {
+	ttsChunks = {
+		{
+			text ="Speak",
+			type = "FILE"
+		}
+	},
+}
 
-local function speakSuccess(pttsName)
-	print("Waiting 20s ...")
+local ttsSpeakRequestParams = {
+	ttsChunks = requestParams.ttsChunks,
+}
+
+local allParams = {
+	requestParams = requestParams,
+	ttsSpeakRequestParams = ttsSpeakRequestParams
+}
+
+local function speakSuccess(params)
+
+	local responseDelay = 3000
 	local mobSession = common.getMobileSession()
 	local hmiConnection = common.getHMIConnection()
-	local cid = mobSession:SendRPC("Speak", getRequestParams())
-	EXPECT_HMICALL("TTS.Speak", getRequestParams())
+	local cid = mobSession:SendRPC("Speak", params.requestParams)
+
+	params.ttsSpeakRequestParams.appID = common.getHMIAppId()
+	EXPECT_HMICALL("TTS.Speak", params.ttsSpeakRequestParams)
 	:Do(function(_, data)
 			hmiConnection:SendNotification("TTS.Started")
-			local function sendSpeakResponse()
-				hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })
+			local speakId = data.id
+			local function speakResponse()
+				hmiConnection:SendResponse(speakId, "TTS.Speak", "SUCCESS", { })
 				hmiConnection:SendNotification("TTS.Stopped")
 			end
-			local function sendOnResetTimeout()
-				hmiConnection:SendNotification("TTS.OnResetTimeout",
-					{ appID = common.getHMIAppId(), methodName = "TTS.Speak" })
-			end
-			RUN_AFTER(sendOnResetTimeout, 9000)
-			RUN_AFTER(sendSpeakResponse, 18000)
+
+		RUN_AFTER(speakResponse, responseDelay - 1000)
+
 	end)
 
 	mobSession:ExpectNotification("OnHMIStatus",
@@ -66,12 +74,12 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 
 runner.Title("Test")
-runner.Step("Speak Positive Case", speakSuccess)
+runner.Step("Speak Positive Case", speakSuccess, {allParams})
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions)

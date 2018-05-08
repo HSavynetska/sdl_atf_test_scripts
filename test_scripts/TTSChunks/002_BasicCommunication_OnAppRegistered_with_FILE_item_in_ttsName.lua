@@ -26,7 +26,7 @@ runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
 
 runner.Title("Test")
-runner.Step("App registration with 'ttsName':'FILE', HMI receives BC.OnAppRegistered notification with new parameters", common.registerApp, { 1, pttsName})
+runner.Step("App registration with 'ttsName':'FILE', HMI receives BC.OnAppRegistered notification with new parameters", common.registerAppWithTTS)
 
 runner.Title("Postconditions")
 runner.Step("Stop SDL", common.postconditions)

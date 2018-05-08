@@ -47,13 +47,6 @@ local requestParams = {
     },
   },
   timeout = 5000,
-  vrHelp = {
-    {
-    text = "textVrhelp",
-    position = 1,
-    image = ImageValue
-    },
-  }
 }
 
 local responseUiParams = {
@@ -81,7 +74,7 @@ local function setChoiseSet(choiceIDValue)
   return temp
 end
 
-local function SendOnSystemContext(self, ctx)
+local function SendOnSystemContext(ctx)
 local hmiConnection = common.getHMIConnection()
   hmiConnection:SendNotification("UI.OnSystemContext",
     { appID = common.getHMIAppId(), systemContext = ctx })
@@ -153,7 +146,6 @@ local function PerformInteractionSuccess(paramsSend)
         fieldName = "initialInteractionText",
         fieldText = paramsSend.initialText
       },
-      vrHelp = paramsSend.vrHelp,
       vrHelpTitle = paramsSend.initialText
     })
   :Do(function(_,data)
@@ -173,12 +165,10 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 runner.Step("CreateInteractionChoiceSet with id 100", CreateInteractionChoiceSet, {100})
-runner.Step("CreateInteractionChoiceSet with id 200", CreateInteractionChoiceSet, {200})
-runner.Step("CreateInteractionChoiceSet with id 300", CreateInteractionChoiceSet, {300})
 
 runner.Title("Test")
 runner.Step("PerformInteraction Positive Case", PerformInteractionSuccess, { requestParams })

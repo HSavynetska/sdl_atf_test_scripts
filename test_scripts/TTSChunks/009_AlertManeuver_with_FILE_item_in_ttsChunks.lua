@@ -16,7 +16,6 @@
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
 local common = require('test_scripts/TTSChunks/commonTTSChunks')
-local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 
 --[[ Test Configuration ]]
 runner.testSettings.isSelfIncluded = false
@@ -35,17 +34,12 @@ local requestParams = {
   },
 }
 
-local responseNaviParams = {
-  softButtons = requestParams.softButtons
-}
-
 local responseTtsParams = {
   ttsChunks = requestParams.ttsChunks
 }
 
 local allParams = {
   requestParams = requestParams,
-  responseNaviParams = responseNaviParams,
   responseTtsParams = responseTtsParams
 }
 
@@ -97,7 +91,6 @@ runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
 runner.Step("App registration", common.registerApp)
 runner.Step("PTU", common.policyTableUpdate, { PTUpdateFunc })
 runner.Step("Activate App", common.activateApp)
-runner.Step("Upload icon file", common.putFile)
 
 runner.Title("Test")
 runner.Step("AlertManeuver Positive Case", alertManeuver, { allParams })

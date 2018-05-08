@@ -30,8 +30,6 @@ local requestParams = {
 			type = "FILE",
 		}
 	},
-	playTone = true,
-	progressIndicator = true
 }
 
 local responseUiParams = {
@@ -50,13 +48,11 @@ local responseUiParams = {
 		}
 	},
 	alertType = "BOTH",
-	progressIndicator = requestParams.progressIndicator,
 }
 
 local ttsSpeakRequestParams = {
 	ttsChunks = requestParams.ttsChunks,
-	speakType = "ALERT",
-	playTone = requestParams.playTone
+	speakType = "ALERT"
 }
 
 local allParams = {
@@ -67,6 +63,7 @@ local allParams = {
 
 --[[ Local Functions ]]
 local function sendOnSystemContext(pAppId, ctx)
+if not pAppId then pAppId = 1 end
 local hmiConnection = common.getHMIConnection()
   	hmiConnection:SendNotification("UI.OnSystemContext",
   		{
@@ -76,7 +73,6 @@ local hmiConnection = common.getHMIConnection()
 end
 
 local function alert(params)
-	-- prepareAlertParams(params, additionalParams)
 
 	local responseDelay = 3000
 	local mobSession = common.getMobileSession()
@@ -118,7 +114,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, {common.hmi_value})
-runner.Step("App registration", common.registerApp, {1, pttsName})
+runner.Step("App registration", common.registerApp)
 runner.Step("Activate App", common.activateApp)
 runner.Step("Upload icon file", common.putFile)
 
