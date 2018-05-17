@@ -62,11 +62,13 @@ end
 function m.cloneTable(pTbl)
   if pTbl == nil then
     return {}
+  elseif pTbl == json.EMPTY_ARRAY then
+    return pTbl
   end
   local copy = {}
   for k, v in pairs(pTbl) do
     if type(v) == 'table' then
-      v = m:cloneTable(v)
+      v = m.cloneTable(v)
     end
     copy[k] = v
   end

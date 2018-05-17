@@ -118,11 +118,10 @@ function Test:TestStep_PTU_DB_GetURLs_NoAppRegistered()
   local policy_endpoints = {}
 
   local sevices_table = commonFunctions:get_data_policy_sql(config.pathToSDL.."/storage/policy.sqlite", "select service from endpoint")
-
   for _, value in pairs(sevices_table) do
     policy_endpoints[#policy_endpoints + 1] = { found = false, service = value }
     --TODO(istoimenova): Should be updated when policy defect is fixed
-    if ( value == "4" or value == "7") then
+    if ( value == "0x04" or value == "0x07") then
       policy_endpoints[#policy_endpoints].found = true
     end
   end

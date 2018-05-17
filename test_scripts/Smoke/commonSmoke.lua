@@ -1,7 +1,6 @@
 ---------------------------------------------------------------------------------------------------
 -- Smoke API common module
 ---------------------------------------------------------------------------------------------------
-
 --[[ General configuration parameters ]]
 config.mobileHost = "127.0.0.1"
 config.defaultProtocolVersion = 2
@@ -15,11 +14,11 @@ local commonFunctions = require("user_modules/shared_testcases/commonFunctions")
 local commonSteps = require("user_modules/shared_testcases/commonSteps")
 local commonTestCases = require("user_modules/shared_testcases/commonTestCases")
 local commonPreconditions = require('user_modules/shared_testcases/commonPreconditions')
-local events = require("events")
+local utils = require('user_modules/utils')
 
 --[[ Local Variables ]]
-local ptu_table = {}
 local hmiAppIds = {}
+local preloadedPT = commonFunctions:read_parameter_from_smart_device_link_ini("PreloadedPT")
 
 local commonSmoke = {}
 
@@ -35,97 +34,14 @@ local function allowSDL(self)
     { allowed = true, source = "GUI", device = { id = commonSmoke.getDeviceMAC(), name = commonSmoke.getDeviceName() }})
 end
 
-local function jsonFileToTable(pFileName)
-  local f = io.open(pFileName, "r")
-  local content = f:read("*all")
-  f:close()
-  return json.decode(content)
-end
-
-local function checkIfPTSIsSentAsBinary(bin_data)
-  if not (bin_data ~= nil and string.len(bin_data) > 0) then
-    commonFunctions:userPrint(consts.color.red,
-    "PTS was not sent to Mobile in payload of OnSystemRequest")
-  end
-end
-
-local function getPTUFromPTS(tbl)
-  tbl.policy_table.consumer_friendly_messages.messages = nil
-  tbl.policy_table.device_data = nil
-  tbl.policy_table.module_meta = nil
-  tbl.policy_table.usage_and_error_counts = nil
-  tbl.policy_table.functional_groupings["DataConsent-2"].rpcs = json.null
-  tbl.policy_table.module_config.preloaded_pt = nil
-  tbl.policy_table.module_config.preloaded_date = nil
-end
-
-local function ptu(self, id, pUpdateFunction)
-  local function getAppsCount()
-    local count = 0
-    for _ in pairs(hmiAppIds) do
-      count = count + 1
-    end
-    return count
-  end
-
-  local policy_file_name = "PolicyTableUpdate"
-  local policy_file_path = commonFunctions:read_parameter_from_smart_device_link_ini("SystemFilesPath")
-  local pts_file_name = commonFunctions:read_parameter_from_smart_device_link_ini("PathToSnapshot")
-  local ptu_file_name = os.tmpname()
-  local requestId = self.hmiConnection:SendRequest("SDL.GetURLS", { service = 7 })
-  EXPECT_HMIRESPONSE(requestId)
-  :Do(function()
-      self.hmiConnection:SendNotification("BasicCommunication.OnSystemRequest",
-        { requestType = "PROPRIETARY", fileName = pts_file_name })
-      getPTUFromPTS(ptu_table)
-      local function updatePTU(tbl)
-        tbl.policy_table.app_policies[commonSmoke.getMobileAppId(id)] = commonSmoke.getSmokeAppPoliciesConfig()
-      end
-      updatePTU(ptu_table)
-      if pUpdateFunction then
-        pUpdateFunction(ptu_table)
-      end
-      local function tableToJsonFile(tbl, file_name)
-        local f = io.open(file_name, "w")
-        f:write(json.encode(tbl))
-        f:close()
-      end
-      tableToJsonFile(ptu_table, ptu_file_name)
-
-      local event = events.Event()
-      event.matches = function(self, e) return self == e end
-      EXPECT_EVENT(event, "PTU event")
-      :Timeout(11000)
-
-      for id = 1, getAppsCount() do
-        local mobileSession = commonSmoke.getMobileSession(id, self)
-        mobileSession:ExpectNotification("OnSystemRequest", { requestType = "PROPRIETARY" })
-        :Do(function(_, data)
-          print("App ".. id .. " was used for PTU")
-          RAISE_EVENT(event, event, "PTU event")
-          checkIfPTSIsSentAsBinary(data.binaryData)
-          local corIdSystemRequest = mobileSession:SendRPC("SystemRequest",
-            { requestType = "PROPRIETARY", fileName = policy_file_name }, ptu_file_name)
-          EXPECT_HMICALL("BasicCommunication.SystemRequest")
-          :Do(function(_, data)
-            self.hmiConnection:SendResponse(data.id, "BasicCommunication.SystemRequest", "SUCCESS", { })
-            self.hmiConnection:SendNotification("SDL.OnReceivedPolicyUpdate",
-              { policyfile = policy_file_path .. "/" .. policy_file_name })
-          end)
-          mobileSession:ExpectResponse(corIdSystemRequest, { success = true, resultCode = "SUCCESS" })
-          :Do(function() os.remove(ptu_file_name) end)
-        end)
-        :Times(AtMost(1))
-      end
-    end)
-end
-
 --[[Module functions]]
 
 function commonSmoke.preconditions()
   commonFunctions:SDLForceStop()
   commonSteps:DeletePolicyTable()
   commonSteps:DeleteLogsFiles()
+  commonPreconditions:BackupFile(preloadedPT)
+  commonSmoke.updatePreloadedPT()
 end
 
 function commonSmoke.getDeviceName()
@@ -183,17 +99,10 @@ end
 function commonSmoke.getMobileSession(pAppId, self)
   self, pAppId = commonSmoke.getSelfAndParams(pAppId, self)
   if not pAppId then pAppId = 1 end
+  if not self["mobileSession" .. pAppId] then
+    self["mobileSession" .. pAppId] = mobile_session.MobileSession(self, self.mobileConnection)
+  end
   return self["mobileSession" .. pAppId]
-end
-
-function commonSmoke.getSmokeAppPoliciesConfig()
-  return {
-    keep_context = false,
-    steal_focus = false,
-    priority = "NONE",
-    default_hmi = "NONE",
-    groups = { "Base-4" }
-  }
 end
 
 function commonSmoke.splitString(inputStr, sep)
@@ -287,39 +196,6 @@ function commonSmoke.start(pHMIParams, self)
   end)
 end
 
-function commonSmoke.registerApplicationWithPTU(pAppId, pUpdateFunction, self)
-  self, pAppId, pUpdateFunction = commonSmoke.getSelfAndParams(pAppId, pUpdateFunction, self)
-  if not pAppId then pAppId = 1 end
-  self["mobileSession" .. pAppId] = mobile_session.MobileSession(self, self.mobileConnection)
-  self["mobileSession" .. pAppId]:StartService(7)
-  :Do(function()
-    local corId = self["mobileSession" .. pAppId]:SendRPC("RegisterAppInterface",
-      config["application" .. pAppId].registerAppInterfaceParams)
-    EXPECT_HMINOTIFICATION("BasicCommunication.OnAppRegistered",
-      { application = { appName = config["application" .. pAppId].registerAppInterfaceParams.appName } })
-    :Do(function(_, data)
-      hmiAppIds[config["application" .. pAppId].registerAppInterfaceParams.appID] = data.params.application.appID
-      EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate",
-        {status = "UPDATE_NEEDED"}, {status = "UPDATING"}, {status = "UP_TO_DATE" })
-      :Times(3)
-      EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
-      :Do(function(_, data)
-        self.hmiConnection:SendResponse(data.id, data.method, "SUCCESS", { })
-        ptu_table = jsonFileToTable(data.params.file)
-        ptu(self, pAppId, pUpdateFunction)
-      end)
-    end)
-    self["mobileSession" .. pAppId]:ExpectResponse(corId, { success = true, resultCode = "SUCCESS" })
-    :Do(function()
-      self["mobileSession" .. pAppId]:ExpectNotification("OnHMIStatus",
-        {hmiLevel = "NONE", audioStreamingState = "NOT_AUDIBLE", systemContext = "MAIN"})
-      :Times(1)
-      self["mobileSession" .. pAppId]:ExpectNotification("OnPermissionsChange")
-      :Times(AtLeast(1)) -- todo: issue with SDL --> notification is sent twice
-    end)
-  end)
-end
-
 function commonSmoke.putFile(params, pAppId, self)
   if not pAppId then pAppId = 1 end
   local mobileSession = commonSmoke.getMobileSession(pAppId, self);
@@ -363,6 +239,49 @@ end
 
 function commonSmoke.postconditions()
   StopSDL()
+  commonPreconditions:RestoreFile(preloadedPT)
+end
+
+function commonSmoke.updatePreloadedPT()
+  local preloadedFile = commonPreconditions:GetPathToSDL() .. preloadedPT
+  local pt = utils.jsonFileToTable(preloadedFile)
+  pt.policy_table.functional_groupings["DataConsent-2"].rpcs = json.null
+  local additionalRPCs = {
+    "SendLocation", "SubscribeVehicleData", "UnsubscribeVehicleData", "GetVehicleData", "UpdateTurnList",
+    "AlertManeuver", "DialNumber", "ReadDID", "GetDTCs", "ShowConstantTBT"
+  }
+  pt.policy_table.functional_groupings.NewTestCaseGroup = { rpcs = { } }
+  for _, v in pairs(additionalRPCs) do
+    pt.policy_table.functional_groupings.NewTestCaseGroup.rpcs[v] = {
+      hmi_levels = { "BACKGROUND", "FULL", "LIMITED" }
+    }
+  end
+  pt.policy_table.app_policies["0000001"] = utils.cloneTable(pt.policy_table.app_policies.default)
+  pt.policy_table.app_policies["0000001"].groups = { "Base-4", "NewTestCaseGroup" }
+  pt.policy_table.app_policies["0000001"].keep_context = true
+  pt.policy_table.app_policies["0000001"].steal_focus = true
+  utils.tableToJsonFile(pt, preloadedFile)
+end
+
+function commonSmoke.registerApp(pAppId, self)
+  self, pAppId = commonSmoke.getSelfAndParams(pAppId, self)
+  if not pAppId then pAppId = 1 end
+  local mobSession = commonSmoke.getMobileSession(pAppId, self)
+  mobSession:StartService(7)
+  :Do(function()
+      local corId = mobSession:SendRPC("RegisterAppInterface", config["application" .. pAppId].registerAppInterfaceParams)
+      EXPECT_HMINOTIFICATION("BasicCommunication.OnAppRegistered",
+        { application = { appName = config["application" .. pAppId].registerAppInterfaceParams.appName } })
+      :Do(function(_, data)
+          hmiAppIds[config["application" .. pAppId].registerAppInterfaceParams.appID] = data.params.application.appID
+        end)
+      mobSession:ExpectResponse(corId, { success = true, resultCode = "SUCCESS" })
+      :Do(function()
+          mobSession:ExpectNotification("OnHMIStatus",
+            { hmiLevel = "NONE", audioStreamingState = "NOT_AUDIBLE", systemContext = "MAIN" })
+          mobSession:ExpectNotification("OnPermissionsChange")
+        end)
+    end)
 end
 
 return commonSmoke

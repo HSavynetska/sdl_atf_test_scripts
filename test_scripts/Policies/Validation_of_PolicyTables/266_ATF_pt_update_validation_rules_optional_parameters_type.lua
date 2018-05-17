@@ -99,8 +99,6 @@ function Test:updatePolicyInDifferentSessions(_, appName, mobileSession)
 
   EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate",
     {status = "UPDATING"}, {status = "UPDATE_NEEDED"}):Times(2)
-
-  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 --[[ Test ]]
@@ -108,6 +106,7 @@ commonFunctions:newTestCasesGroup("Test")
 
 function Test:TestStep_ActivateAppInFULL()
   activateAppInSpecificLevel(self)
+  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 function Test:TestStep_UpdatePolicy_ExpectOnAppPermissionChangedWithAppID()

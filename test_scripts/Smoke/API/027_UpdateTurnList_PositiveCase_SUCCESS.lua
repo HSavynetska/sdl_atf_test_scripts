@@ -83,19 +83,6 @@ local allParams = {
 }
 
 --[[ Local Functions ]]
-local function ptuUpdateFunc(tbl)
-  local UpdateTurnListGroup = {
-    rpcs = {
-      UpdateTurnList = {
-        hmi_levels = { "BACKGROUND", "FULL", "LIMITED" },
-      }
-    }
-  }
-  tbl.policy_table.functional_groupings.NewTestCaseGroup = UpdateTurnListGroup
-  tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID].groups =
-  { "Base-4", "NewTestCaseGroup" }
-end
-
 local function updateTurnList(pParams, self)
   local cid = self.mobileSession1:SendRPC("UpdateTurnList", pParams.requestParams)
   EXPECT_HMICALL("Navigation.UpdateTurnList", pParams.responseUiParams)
@@ -109,7 +96,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU, { 1, ptuUpdateFunc })
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 runner.Step("Upload icon file", commonSmoke.putFile, { putFileParams })
 

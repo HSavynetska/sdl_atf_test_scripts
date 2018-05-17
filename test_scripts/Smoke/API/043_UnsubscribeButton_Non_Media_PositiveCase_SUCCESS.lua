@@ -85,7 +85,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU)
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 for _, v in pairs(buttonName) do
   runner.Step("SubscribeButton " .. v .. " Positive Case", subscribeButtons, { v })

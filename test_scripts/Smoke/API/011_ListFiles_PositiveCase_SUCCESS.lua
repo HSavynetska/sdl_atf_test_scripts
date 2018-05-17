@@ -83,7 +83,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU)
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 for i, fileName in ipairs(testFileNamesList) do
 	runner.Step("Upload test file #" .. i, putFile, {fileName})

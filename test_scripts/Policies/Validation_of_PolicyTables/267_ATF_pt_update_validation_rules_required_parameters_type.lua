@@ -186,8 +186,6 @@ function Test:updatePolicyInDifferentSessions(_, appName, mobileSession)
 
   EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate",
     {status = "UPDATING"}, {status = "UPDATE_NEEDED"}):Times(2)
-
-  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 local function constructPathToDatabase()
@@ -366,6 +364,7 @@ function Test:Precondition_ActivateAppInFULL()
   HMIAppId = self.applications[config.application1.registerAppInterfaceParams.appName]
   activateAppInSpecificLevel(self,HMIAppId,"FULL")
   TestData:store("Store LocalPT before PTU", constructPathToDatabase(), "beforePTU_policy.sqlite" )
+  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 --[[ Test ]]

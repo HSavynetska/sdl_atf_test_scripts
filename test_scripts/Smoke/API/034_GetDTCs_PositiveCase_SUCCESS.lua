@@ -31,18 +31,6 @@ local runner = require('user_modules/script_runner')
 local commonSmoke = require('test_scripts/Smoke/commonSmoke')
 
 --[[ Local Functions ]]
-local function PTUpdateFunc(tbl)
-  local GetDTCs = {
-    rpcs = {
-      GetDTCs = {
-        hmi_levels = { "BACKGROUND", "FULL", "LIMITED" },
-      }
-    }
-  }
-  tbl.policy_table.functional_groupings.NewTestCaseGroup = GetDTCs
-  tbl.policy_table.app_policies[commonSmoke.getMobileAppId()].groups = { "Base-4", "NewTestCaseGroup" }
-end
-
 local function getDTCsSuccess(self)
   local requestParams = {
     ecuName = 2,
@@ -73,7 +61,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU, { 1, PTUpdateFunc })
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 
 runner.Title("Test")

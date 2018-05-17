@@ -59,19 +59,6 @@ local requestParams = {
 }
 
 --[[ Local Functions ]]
-local function ptuUpdateFuncRPC(tbl)
-  local SLgroup = {
-    rpcs = {
-      SendLocation = {
-        hmi_levels = { "NONE", "BACKGROUND", "FULL", "LIMITED" }
-      }
-    }
-  }
-  tbl.policy_table.functional_groupings.NewTestCaseGroup = SLgroup
-  tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID].groups =
-  { "Base-4", "NewTestCaseGroup" }
-end
-
 local function sendLocation(params, self)
   local cid = self.mobileSession1:SendRPC("SendLocation", params)
   params.appID = commonSmoke.getHMIAppId()
@@ -87,7 +74,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU, { 1, ptuUpdateFuncRPC })
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 runner.Step("Upload icon file", commonSmoke.putFile, { putFileParams })
 

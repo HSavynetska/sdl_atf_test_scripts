@@ -4,13 +4,13 @@ local consts = require('user_modules/consts')
 local commonFunctions = require('user_modules/shared_testcases/commonFunctions')
 
 local isInitialStep = true
-local isPrintTitle = false
-local title
+local idx = 1
 local runner = {}
 
 runner.testSettings = testSettings
 
 Test.isTest = true
+Test.caseTitles = { }
 
 --[Utils]
 local function existsInList (pList, pValue)
@@ -24,18 +24,14 @@ end
 
 --[ATF]
 local function buildTitle(titleText)
-  local maxLength = 101
+  local maxLength = 96
   local filler = "-"
   local resultTable = {}
   for line in titleText:gmatch("[^\n]+") do
-    local lineLength = #line
-    if lineLength >= maxLength then
-      table.insert(resultTable, line)
-    else
-      local tailLength = math.fmod(maxLength - lineLength, 2)
-      local emtyLineSideLength = math.floor((maxLength - lineLength) / 2)
-      table.insert(resultTable, filler:rep(emtyLineSideLength) .. line .. filler:rep(emtyLineSideLength + tailLength))
+    if line:len() >= maxLength then
+      line = line:sub(1, maxLength - 1)
     end
+    table.insert(resultTable, "--- " .. line .. " " .. filler:rep(maxLength - line:len(line)))
   end
   return table.concat(resultTable, "\n")
 end
@@ -68,18 +64,9 @@ local function checkStepImplFunction(testStepImplFunction)
   end
 end
 
-local function addTestStep(testStepName, testStepImplFunction)
-  testStepName = buildStepName(testStepName)
-  testStepImplFunction = checkStepImplFunction(testStepImplFunction)
-  Test[testStepName] = testStepImplFunction
-end
-
 local function extendedAddTestStep(testStepName, testStepImplFunction, paramsTable)
+  testStepName = buildStepName(testStepName)
   local implFunctionsListWithParams = {}
-  if isPrintTitle then
-    table.insert(implFunctionsListWithParams, {implFunc = commonFunctions.userPrint, params = {0, 32, title, "\n"}})
-    isPrintTitle = false
-  end
   if not paramsTable then
     paramsTable = {}
   end
@@ -92,7 +79,7 @@ local function extendedAddTestStep(testStepName, testStepImplFunction, paramsTab
         func.implFunc(unpack(func.params, 1, table.maxn(func.params)))
       end
     end
-  addTestStep(testStepName, newTestStepImplFunction)
+  Test[testStepName] = checkStepImplFunction(newTestStepImplFunction)
 end
 
 local function isTestApplicable(testApplicableSdlSettings)
@@ -122,7 +109,6 @@ local function isTestApplicable(testApplicableSdlSettings)
 end
 
 local function skipTest(reason)
-  title = ""
   runner.Title("TEST SKIPPED")
   runner.Step(
       "Skip reason",
@@ -153,13 +139,10 @@ end
 
 --[[ Title + Step approach]]
 function runner.Title(titleText)
-  if isPrintTitle == true then
-    title = title .. "\n" .. titleText
-  else
-    title = titleText
-    isPrintTitle = true
+  if Test.caseTitles[idx] == nil then
+    Test.caseTitles[idx] = {}
   end
-  title = buildTitle(title)
+  table.insert(Test.caseTitles[idx], buildTitle(titleText))
 end
 
 function runner.Step(testStepName, testStepImplFunction, paramsTable)
@@ -182,6 +165,7 @@ function runner.Step(testStepName, testStepImplFunction, paramsTable)
   else
     extendedAddTestStep(testStepName, testStepImplFunction, paramsTable)
   end
+  idx = idx + 1
 end
 
 return runner

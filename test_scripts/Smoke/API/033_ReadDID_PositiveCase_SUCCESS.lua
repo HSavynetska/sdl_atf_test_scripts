@@ -32,19 +32,6 @@ local runner = require('user_modules/script_runner')
 local commonSmoke = require('test_scripts/Smoke/commonSmoke')
 
 --[[ Local Functions ]]
-local function PTUpdateFunc(tbl)
-  local ReadDIDgroup = {
-    rpcs = {
-      ReadDID = {
-        hmi_levels = { "BACKGROUND", "FULL", "LIMITED" },
-      }
-    }
-  }
-  tbl.policy_table.functional_groupings.NewTestCaseGroup = ReadDIDgroup
-  tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID].groups =
-  { "Base-4", "NewTestCaseGroup" }
-end
-
 local function setReadDIDRequest()
   local temp = {
     ecuName = 2000,
@@ -88,7 +75,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU, { 1, PTUpdateFunc})
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 
 runner.Title("Test")

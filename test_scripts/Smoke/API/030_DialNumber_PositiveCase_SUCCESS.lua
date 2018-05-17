@@ -37,19 +37,6 @@ local requestParams = {
 }
 
 --[[ Local Functions ]]
-local function PTUpdateFuncRPC(tbl)
-  local DialNumberGroup = {
-    rpcs = {
-      DialNumber = {
-        hmi_levels = { "NONE", "BACKGROUND", "FULL", "LIMITED" }
-      }
-    }
-  }
-  tbl.policy_table.functional_groupings.NewTestCaseGroup = DialNumberGroup
-  tbl.policy_table.app_policies[config.application1.registerAppInterfaceParams.appID].groups =
-  { "Base-4", "NewTestCaseGroup" }
-end
-
 local function dialNumber(pParams, self)
   local cid = self.mobileSession1:SendRPC("DialNumber", pParams)
   pParams.appID = commonSmoke.getHMIAppId()
@@ -64,7 +51,7 @@ end
 runner.Title("Preconditions")
 runner.Step("Clean environment", commonSmoke.preconditions)
 runner.Step("Start SDL, HMI, connect Mobile, start Session", commonSmoke.start)
-runner.Step("RAI, PTU", commonSmoke.registerApplicationWithPTU, { 1, PTUpdateFuncRPC })
+runner.Step("RAI", commonSmoke.registerApp)
 runner.Step("Activate App", commonSmoke.activateApp)
 
 runner.Title("Test")

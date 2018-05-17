@@ -203,9 +203,6 @@ function Test:updatePolicyInDifferentSessions(PTName, appName, mobileSession)
 
   EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate",
     {status = "UPDATING"}, {status = "UPDATE_NEEDED"}):Times(2)
-
-  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
-
 end
 
   local function constructPathToDatabase()
@@ -391,6 +388,7 @@ commonFunctions:newTestCasesGroup("Test")
 function Test:ActivateAppInFULL()
   HMIAppId = self.applications[config.application1.registerAppInterfaceParams.appName]
   activateAppInSpecificLevel(self,HMIAppId,"FULL")
+  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 function Test:UpdatePolicy_ExpectOnAppPermissionChangedWithAppID()

@@ -74,8 +74,6 @@ function Test:updatePolicyInDifferentSessions(_, appName, mobileSession)
 
   EXPECT_HMINOTIFICATION("SDL.OnStatusUpdate",
     {status = "UPDATING"}, {status = "UPDATE_NEEDED"}):Times(2)
-
-  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 --[[ Preconditions ]]
@@ -85,6 +83,7 @@ function Test:ActivateApp()
   HMIAppId = self.applications[config.application1.registerAppInterfaceParams.appName]
 
   commonSteps:ActivateAppInSpecificLevel(Test, HMIAppId)
+  EXPECT_HMICALL("BasicCommunication.PolicyUpdate")
 end
 
 --[[ Test ]]
