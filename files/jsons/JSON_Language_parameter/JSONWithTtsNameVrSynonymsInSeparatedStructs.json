@@ -25,10 +25,7 @@
                     },
                     {
                         "EN-US": {
-                            "vrSynonyms": [
-                                "Rap music App 1 EN",
-                                "Rap music App 2 EN"
-                            ]
+                            "ttsName": "Rock music App tts name EN"
                         }
                     }
                 ]
