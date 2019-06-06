@@ -19,9 +19,8 @@ local c = actions
 local preloadedPT = commonFunctions:read_parameter_from_smart_device_link_ini("PreloadedPT")
 
 --[[ Common Functions ]]
-local registerAppOrig = c.registerApp
-function c.registerApp(pAppId)
-  registerAppOrig(pAppId)
+function c.registerAppWithOnDD(pAppId)
+  c.registerApp(pAppId)
   c.getMobileSession(pAppId):ExpectNotification("OnDriverDistraction", { state = "DD_OFF" })
 end
 

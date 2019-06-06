@@ -102,29 +102,6 @@ local function onDriverDistraction()
   common.getHMIConnection():SendNotification("UI.OnDriverDistraction", { state = "DD_ON" })
 end
 
-local function registerApp()
-  common.getMobileSession(2):StartService(7)
-  :Do(function()
-      local corId = common.getMobileSession(2):SendRPC("RegisterAppInterface", common.getConfigAppParams(2))
-      common.getHMIConnection():ExpectNotification("BasicCommunication.OnAppRegistered",
-        { application = { appName = common.getConfigAppParams(2).appName } })
-      :Do(function(_, d1)
-          common.setHMIAppId(d1.params.application.appID, 2)
-          common.getHMIConnection():ExpectRequest("BasicCommunication.PolicyUpdate")
-          :Do(function(_, d2)
-              common.getHMIConnection():SendResponse(d2.id, d2.method, "SUCCESS", { })
-            end)
-        end)
-      common.getMobileSession(2):ExpectResponse(corId, { success = true, resultCode = "SUCCESS" })
-      :Do(function()
-          common.getMobileSession(2):ExpectNotification("OnHMIStatus",
-            { hmiLevel = "NONE", audioStreamingState = "NOT_AUDIBLE", systemContext = "MAIN" })
-          common.getMobileSession(2):ExpectNotification("OnPermissionsChange")
-          :Times(AnyNumber())
-        end)
-    end)
-end
-
 --[[ Scenario ]]
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
@@ -132,7 +109,7 @@ runner.Step("Set LockScreenDismissalEnabled", updatePreloadedPT, { false })
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
 runner.Step("onDriverDistraction DD_ON", onDriverDistraction)
 runner.Step("Register App1", common.registerAppWOPTU, { 1 })
-runner.Step("Register App2", registerApp)
+runner.Step("Register App2", common.registerApp, { 2 })
 runner.Step("App1 activation HMI level FULL", activateApp, { 1, 2, false })
 
 runner.Title("Test")

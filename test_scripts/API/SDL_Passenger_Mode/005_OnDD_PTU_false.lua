@@ -40,7 +40,7 @@ runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
 runner.Step("Set LockScreenDismissalEnabled", common.updatePreloadedPT, { nil })
 runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
-runner.Step("Register App", common.registerApp)
+runner.Step("Register App", common.registerAppWithOnDD)
 
 runner.Title("Test")
 runner.Step("OnDriverDistraction ON/OFF missing", common.onDriverDistraction, { nil })
