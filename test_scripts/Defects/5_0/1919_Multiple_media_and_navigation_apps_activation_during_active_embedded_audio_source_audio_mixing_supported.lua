@@ -25,12 +25,11 @@
 -- 2) SDL -> HMI: SDL.ActivateApp (SUCCESS)
 -- 3) SDL -> non-media app_3 : OnHMIStatus (FULL, NOT_AUDIBLE)
 -- Note: media app_1 still in LIMITED and AUDIBLE
--- Actual result:
--- 1) SDL does not set required HMILevel and audioStreamingState
 ---------------------------------------------------------------------------------------------------
 --[[ Required Shared libraries ]]
 local runner = require('user_modules/script_runner')
 local common = require("user_modules/sequences/actions")
+local hmi_values = require('user_modules/hmi_values')
 
 --[[ Test Configuration ]]
 runner.testSettings.isSelfIncluded = false
@@ -39,11 +38,17 @@ runner.testSettings.isSelfIncluded = false
 config.application1.registerAppInterfaceParams.appHMIType = { "MEDIA" }
 config.application1.registerAppInterfaceParams.isMediaApplication = true
 config.application2.registerAppInterfaceParams.appHMIType = { "NAVIGATION" }
-config.application2.registerAppInterfaceParams.isMediaApplication = true
+config.application2.registerAppInterfaceParams.isMediaApplication = false
 config.application3.registerAppInterfaceParams.appHMIType = { "DEFAULT" }
 config.application3.registerAppInterfaceParams.isMediaApplication = false
 
 --[[ Local Functions ]]
+local function getHMIParams()
+  local hmiParams = hmi_values.getDefaultHMITable()
+  hmiParams.BasicCommunication.MixingAudioSupported.params.attenuatedSupported = true
+  return hmiParams
+end
+
 local function activateApp(pAppId)
   if not pAppId then pAppId = 1 end
   local requestId = common.getHMIConnection():SendRequest("SDL.ActivateApp", { appID = common.getHMIAppId(pAppId) })
@@ -118,7 +123,7 @@ end
 --[[ Test ]]
 runner.Title("Preconditions")
 runner.Step("Clean environment", common.preconditions)
-runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start)
+runner.Step("Start SDL, HMI, connect Mobile, start Session", common.start, { getHMIParams })
 runner.Step("Register App 1 (media)", common.registerAppWOPTU, { 1 })
 runner.Step("Register App 2 (navi)", common.registerAppWOPTU, { 2 })
 runner.Step("Register App 3 (non media)", common.registerAppWOPTU, { 3 })
